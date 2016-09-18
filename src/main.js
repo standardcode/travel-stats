@@ -19,6 +19,14 @@ const get = (url) => Observable.defer(() => Observable.create((observer) => {
     })
 }));
 
+const saveCsv = (file, data) => Observable.create((observer) => {
+    csv.writeToPath(`${file}.csv`, data, {headers: true})
+        .on("finish", function () {
+            observer.next(file);
+            observer.complete();
+        });
+});
+
 Observable.create((observer) => {
     csv.fromPath("cities.csv", {
         headers: true
@@ -30,7 +38,7 @@ Observable.create((observer) => {
         observer.complete();
     });
 }).reduce(accumulator, []).flatMap(cities => {
-    cities = _.take(_.orderBy(cities, "population", "desc"), 30);
+    cities = _.take(_.orderBy(cities, "population", "desc"), 100);
     const osrmServer = "http://localhost:5000";
     return Observable.from(cities).map(city => {
         return get(`${osrmServer}/nearest/v1/driving/${city.longitude},${city.latitude}`)
@@ -44,6 +52,7 @@ Observable.create((observer) => {
                 }
             })
     }).concatAll().reduce(accumulator, []).flatMap(alignedPoints => {
+        console.time("routes");
         return Observable.from(alignedPoints).flatMap(start => {
             return Observable.from(alignedPoints).filter(destination => destination !== start).map(destination => {
                 return get(`${osrmServer}/route/v1/driving/${start.location.join()};${destination.location.join()}?overview=false`)
@@ -68,7 +77,22 @@ Observable.create((observer) => {
                 distance: Math.sqrt(10000 * byCity.area / (2 * Math.PI)) // assume equal population density in a city
             };
             inCity.duration = inCity.distance / (30 * 1000 / 3600); // assume average 30km/h. See https://traffic.naviexpert.pl/
-            const sum = (key) => _.sumBy(cities, city => city[other].population / city[key]) + (byCity.population / inCity[key]);
+            const sum = (key) => {
+                const far = _(cities).sortBy(key).map(city => {
+                    return {
+                        [key]: city[key],
+                        population: city[other].population
+                    };
+                }).value();
+                far.unshift({
+                    [key]: inCity[key],
+                    population: byCity.population
+                });
+                return {
+                    all: far,
+                    sum: _.sumBy(far, city => city.population / city[key])
+                };
+            };
             return {
                 duration: sum("duration"),
                 distance: sum("distance"),
@@ -85,18 +109,22 @@ Observable.create((observer) => {
         destination: stat("destination", "start")
     };
 }).flatMap(({start, destination}) => {
+    console.timeEnd("routes");
     return Observable.from([{
         stats: start,
         file: "easy-go"
     }, {
         stats: destination,
         file: "easy-come"
-    }]).flatMap(({stats, file}) => Observable.create((observer) => {
-            csv.writeToPath(`${file}.csv`, _.orderBy(stats, "duration", "desc"), {headers: true})
-                .on("finish", function () {
-                    observer.next(file);
-                    observer.complete();
-                })
-        })
-    );
+    }]).flatMap(({stats, file}) => {
+        return saveCsv(file, _(stats).map(city => {
+            return {
+                ...city,
+                duration: city.duration.sum,
+                distance: city.distance.sum
+            }
+        }).orderBy("duration", "desc").value()).concat(Observable.from(stats).flatMap(city =>
+            saveCsv("cities/" + city.name + "-" + file, city.duration.all)
+        ))
+    });
 }).subscribe((v) => console.log(v));
