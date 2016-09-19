@@ -53,7 +53,7 @@ Observable.create((observer) => {
             })
     }).concatAll().reduce(accumulator, []).flatMap(alignedPoints => {
         console.time("routes");
-        return Observable.from(alignedPoints).flatMap(start => {
+        return Observable.from(alignedPoints).map(start => {
             return Observable.from(alignedPoints).filter(destination => destination !== start).map(destination => {
                 return get(`${osrmServer}/route/v1/driving/${start.location.join()};${destination.location.join()}?overview=false`)
                     .map(({routes}) => {
@@ -66,7 +66,7 @@ Observable.create((observer) => {
                         }
                     })
             }).concatAll().reduce(accumulator, []);
-        }).reduce((a, v) => a.concat(v));
+        }).concatAll().reduce((a, v) => a.concat(v));
     });
 }).map(routes => {
     const stat = (by, other) => {
@@ -90,7 +90,7 @@ Observable.create((observer) => {
                 });
                 return {
                     all: far,
-                    sum: _.sumBy(far, city => city.population / city[key])
+                    sum: _.sumBy(far, city => city.population * city[key]) / 1000000000
                 };
             };
             return {
@@ -123,7 +123,7 @@ Observable.create((observer) => {
                 duration: city.duration.sum,
                 distance: city.distance.sum
             }
-        }).orderBy("duration", "desc").value()).concat(Observable.from(stats).flatMap(city =>
+        }).sortBy("duration").value()).concat(Observable.from(stats).flatMap(city =>
             saveCsv("cities/" + city.name + "-" + file, city.duration.all)
         ))
     });
