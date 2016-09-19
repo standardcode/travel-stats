@@ -29,8 +29,10 @@ const calculateRoutes = (osrmServer, alignedPoints) => Observable.from(alignedPo
                 }
             })
     }).concatAll().reduce(accumulator, []);
-}).concatAll().reduce((a, v) => a.concat(v));
-
+}).concatAll().scan((acc, v, i) => {
+    console.log(`${(100*(i+1)/alignedPoints.length).toFixed(2)}%`);
+    return v;
+}).reduce((a, v) => a.concat(v));
 
 export default (osrmServer) => {
     return {

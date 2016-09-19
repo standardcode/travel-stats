@@ -13,8 +13,8 @@ export default ({start, destination}) => {
         return saveCsv(file, _(stats).map(city => {
             return {
                 ...city,
-                duration: city.duration.sum,
-                distance: city.distance.sum
+                duration: city.duration.sum / 3600, // hours
+                distance: city.distance.sum / 1000 // km
             }
         }).sortBy("duration").value()).concat(Observable.from(stats).flatMap(city =>
             saveCsv("cities/" + city.name + "-" + file, city.duration.all)

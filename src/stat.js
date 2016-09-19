@@ -1,7 +1,13 @@
 import _ from "lodash";
 
+function totalPopulation(routes, by, other) {
+    return routes[0][by].population + _.sumBy(routes, other+".population");
+}
+
 export default (routes, by, other) => {
     const grouped = _.groupBy(routes, by + ".teryt");
+    const total = totalPopulation(_.sample(grouped), by, other);
+
     return _.map(grouped, (cities) => {
         const byCity = cities[0][by];
         const inCity = {
@@ -21,7 +27,7 @@ export default (routes, by, other) => {
             });
             return {
                 all: far,
-                sum: _.sumBy(far, city => city.population * city[key]) / 1000000000
+                sum: _.sumBy(far, city => city.population * city[key]) / total
             };
         };
         return {

@@ -1,2 +1,2 @@
-export const numberOfCities = 3;
+export const numberOfCities = 300;
 export const osrmDomain = "http://localhost:5000";
