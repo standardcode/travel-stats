@@ -1,30 +1,27 @@
 import _ from "lodash";
 import {openCsv}from "./file";
 import route from './route';
-import stat from "./stat";
-import save from './save';
 import {accumulator} from "./util";
 import {numberOfCities, osrmDomain}from "./config";
 import {storeCities,storeRoutes} from "./store";
+import self from "./self";
 
 const log = console.log;
-log("Load cities");
 const logger = (data) => () => log(data);
 console.time("All");
 
+log("Loading cities");
+
 openCsv("cities").map((data) => {
+    data.teryt = +data.teryt;
     data.area = +data.area;
     data.population = +data.population;
     return data;
-}).reduce(accumulator, []).flatMap(storeCities).flatMap(cities => {
-    cities = _.take(_.orderBy(cities, "population", "desc"), numberOfCities);
-    log("Align coordinates to street");
+}).reduce(accumulator, [])
+    .map(cities => _.take(_.orderBy(cities, "population", "desc"), numberOfCities))
+    .flatMap(storeCities).flatMap(cities => {
+    log("Align coordinates to streets");
     const server = route(osrmDomain);
-    return server.alignPoints(cities).do(logger("Find routes")).flatMap(server.calculateRoutes);
-}).flatMap(storeRoutes).map(routes => {
-    log("Calculate stats");
-    return {
-        start: stat(routes, "start", "destination"),
-        destination: stat(routes, "destination", "start")
-    };
-}).do(logger("Save files")).flatMap(save).subscribe((v) => console.log(v), _.noop, () => console.timeEnd("All"));
+    return server.alignPoints(cities).do(logger("Find routes")).flatMap(server.calculateRoutes)
+        .map(routes => routes.concat(self(cities)));
+}).do(logger("Store results in DB")).flatMap(storeRoutes).subscribe(_.noop, _.noop, () => console.timeEnd("All"));

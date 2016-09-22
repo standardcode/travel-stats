@@ -7,5 +7,5 @@ export const storeCities = (cities) => execute("truncate cities cascade;").flatM
 
 export const storeRoutes = (routes) => db(
     'insert into routes("from", "to", distance, duration) values($1, $2, $3, $4)',
-    routes, r => [+r.start.teryt, +r.destination.teryt, r.distance, r.duration]
+    routes, r => [r.start.teryt, r.destination.teryt, r.distance, r.duration]
 );
