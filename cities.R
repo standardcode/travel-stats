@@ -12,17 +12,17 @@ readPopulation <- function(big) {
       sep = ";",
       header = FALSE,
       skip = 10,
-      colClasses = c("population" = "numeric"),
-      col.names = c("teryt", "name", "", "area", "", "population", "", "", "", "")
+      colClasses = c("population" = "numeric", "area" = "numeric"),
+      col.names = c("id", "name", "", "area", "", "population", "", "", "", "")
     )
   cities <-
-    df[complete.cases(df$population), c("teryt", "name", "area", "population")]
-  cities$teryt <-
-    as.integer(lapply(strsplit(as.character(cities$teryt), " "), "[", 1))
+    df[complete.cases(df$population), c("id", "name", "population", "area")]
+  cities$id <-
+    as.integer(lapply(strsplit(as.character(cities$id), " "), "[", 1))
   
   for (i in 1:length(big)) {
-    cities$teryt[cities$name == big[[i]]$name] <-
-      as.integer(big[[i]]$teryt)
+    cities$id[cities$name == big[[i]]$name] <-
+      as.integer(big[[i]]$id)
   }
   
   cities <-
@@ -44,20 +44,20 @@ readGeolocation <- function() {
       read.csv("miejscowosci_1.csv")
     ))
   df <- df[df$rodzaj.obiektu == "miasto",]
-  latitude <- dmsAsDouble(df$szeroko.....geograficzna)
-  longitude <- dmsAsDouble(df$d..ugo.....geograficzna)
+  latitude <- dmsAsDouble(df$szerokość.geograficzna)
+  longitude <- dmsAsDouble(df$długość.geograficzna)
   res <- data.frame(latitude, longitude)
-  res$teryt <-
-    df$teryt <-
+  res$id <-
+    df$id <-
     lapply(as.numeric(
       removeLastChar(
-        df$identyfikator.jednostki.podzia..u.terytorialnego.kraju
+        df$identyfikator.jednostki.podziału.idorialnego.kraju
       )
     ), "[", 1)
   
   big <- lapply(list("Warszawa", "Łódź", "Kraków"), function(name) {
-    return(list(name = name, teryt = df[df$nazwa.g....wna == name &
-                                          df$rodzaj.obiektu == "miasto"]$teryt))
+    return(list(name = name, id = df[df$nazwa.główna == name &
+                                          df$rodzaj.obiektu == "miasto"]$id))
   })
   res <- as.data.frame(lapply(res, function(X)
     unname(unlist(X))))
@@ -68,6 +68,19 @@ geo <- readGeolocation()
 cities <-
   merge(readPopulation(geo$big),
         geo$geo,
-        by.x = "teryt",
-        by.y = "teryt")
-write.csv(cities, file = "cities.csv")
+        by.x = "id",
+        by.y = "id")
+cities <- cities[,c(1,2,4,3,5,6)]
+
+require("RPostgreSQL")
+
+drv <- dbDriver("PostgreSQL")
+con <- dbConnect(drv, dbname = "poland",
+                 host = "localhost", port = 5432,
+                 user = "postgres", password = "pswd")
+
+dbSendQuery(con, "truncate cities cascade")
+dbWriteTable(con, "cities", value = cities, append = TRUE, row.names = FALSE)
+
+dbDisconnect(con)
+dbUnloadDriver(drv)

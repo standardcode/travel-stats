@@ -7,7 +7,7 @@ const alignPoints = (osrmServer, cities) => Observable.from(cities).map(city => 
     return get(`${osrmServer}/nearest/v1/driving/${city.longitude},${city.latitude}`)
         .map(result => {
             return {
-                teryt: city.teryt,
+                id: city.id,
                 name: city.name,
                 area: city.area,
                 population: city.population,
