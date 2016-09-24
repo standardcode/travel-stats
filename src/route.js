@@ -1,9 +1,8 @@
-import {Observable} from 'rxjs/Rx';
-import _ from "lodash";
+import { Observable } from 'rxjs/Rx';
 import get from "./get";
-import {accumulator} from "./util";
+import { osrmServer } from "./config";
 
-const alignPoints = (osrmServer, cities) => Observable.from(cities).map(city => {
+export const alignPoints = (cities) => Observable.from(cities).map(city => {
     return get(`${osrmServer}/nearest/v1/driving/${city.longitude},${city.latitude}`)
         .map(result => {
             return {
@@ -14,12 +13,12 @@ const alignPoints = (osrmServer, cities) => Observable.from(cities).map(city => 
                 location: result.waypoints[0].location
             }
         })
-}).concatAll().reduce(accumulator, []);
+}).concatAll();
 
-const calculateRoutes = (osrmServer, alignedPoints) => Observable.from(alignedPoints).map(start => {
+export const calculateRoutes = (alignedPoints) => Observable.from(alignedPoints).map(start => {
     return Observable.from(alignedPoints).filter(destination => destination !== start).map(destination => {
         return get(`${osrmServer}/route/v1/driving/${start.location.join()};${destination.location.join()}?overview=false`)
-            .map(({routes}) => {
+            .map(({ routes }) => {
                 const route = routes[0];
                 return {
                     start,
@@ -28,15 +27,8 @@ const calculateRoutes = (osrmServer, alignedPoints) => Observable.from(alignedPo
                     duration: route.duration // seconds
                 }
             })
-    }).concatAll().reduce(accumulator, []);
+    }).concatAll();
 }).concatAll().scan((acc, v, i) => {
-    console.log(`${(100*(i+1)/alignedPoints.length).toFixed(2)}%`);
+    console.log(`${(100 * (i + 1) / alignedPoints.length / (alignedPoints.length - 1)).toFixed(2)}%`);
     return v;
-}).reduce((a, v) => a.concat(v));
-
-export default (osrmServer) => {
-    return {
-        alignPoints: _.partial(alignPoints, osrmServer),
-        calculateRoutes: _.partial(calculateRoutes, osrmServer)
-    };
-};
+});

@@ -1,6 +1,6 @@
-import { map } from "lodash";
+import { Observable } from 'rxjs/Rx';
 
-export default (cities) => map(cities, (city) => {
+export default (cities) => Observable.from(cities).map((city) => {
     const route = {
         start: city,
         destination: city,

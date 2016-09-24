@@ -1,17 +1,17 @@
-import _ from "lodash";
-import route from './route';
-import { numberOfCities, osrmDomain } from "./config";
-import { storeRoutes, selectCities } from "./store";
+import { noop } from "lodash";
+import { alignPoints, calculateRoutes } from './route';
+import { numberOfCities, log } from "./config";
+import { selectCities, updateCities, clearRoutes, storeRoutes } from "./store";
 import self from "./self";
+import { accumulator } from "./util";
 
-const log = console.log;
-const logger = (data) => () => log(data);
-console.time("All");
+console.time("Done");
 
 log("Loading cities");
-selectCities(numberOfCities).flatMap(cities => {
-    log("Align coordinates to streets");
-    const server = route(osrmDomain);
-    return server.alignPoints(cities).do(logger("Find routes")).flatMap(server.calculateRoutes)
-        .map(routes => routes.concat(self(cities)));
-}).do(logger("Store results in DB")).flatMap(storeRoutes).subscribe(_.noop, _.noop, () => console.timeEnd("All"));
+clearRoutes().skip(1).concat(selectCities(numberOfCities)).flatMap(cities => {
+    log("Find routes");
+    return alignPoints(cities).flatMap(updateCities).reduce(accumulator, []).flatMap(calculateRoutes).merge(self(cities))
+}).flatMap(storeRoutes).subscribe(noop, log, () => {
+    console.timeEnd("Done");
+    process.exit();
+});

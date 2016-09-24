@@ -1,4 +1,4 @@
-import {Observable} from 'rxjs/Rx';
+import { Observable } from 'rxjs/Rx';
 import request from "request";
 
 export default (url) => Observable.defer(() => Observable.create((observer) => {

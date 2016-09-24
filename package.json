@@ -4,7 +4,9 @@
   "description": "Reach people in cities",
   "main": "src/main.js",
   "scripts": {
-    "start": "nodemon src/main.js --exec babel-node --presets es2015,stage-2"
+    "start": "nodemon src/main.js --exec babel-node --presets es2015,stage-2",
+    "build": "babel src -d dist",
+    "serve": "node dist/main.js"
   },
   "author": "Łukasz Sutkowski",
   "license": "ISC",
