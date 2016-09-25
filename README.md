@@ -8,12 +8,13 @@ Main question: What is the average driving time/distance from one city to reach 
 ### Statistics
 
 ![Map of cities](./img/driving-time.png)
+
 Each dot is a city and color indicates average driving time from this city to a random person in any other city in the country. This calculation does not cover villages.
 
 Longest driving time between 2 cities
 
-       start       |  destination  |    km   |    h
-    Ustrzyki Dolne |   Kołobrzeg   | 1013.51 | 11.318
+       start       | destination |    km   |    h
+    Ustrzyki Dolne |  Kołobrzeg  | 1013.51 | 11.318
 
 Shortest way between 2 cities
 
