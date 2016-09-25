@@ -1,8 +1,9 @@
-library(data.table)
-library(sp)
+library("data.table")
+library("sp")
+source("db.R")
 
-removeLastChar <- function(text) {
-  return(substr(text, 1, nchar(text) - 1))
+convertToId <- function(text) {
+  return(as.integer(substr(text, 1, nchar(text) - 1)))
 }
 
 readPopulation <- function(big) {
@@ -47,13 +48,7 @@ readGeolocation <- function() {
   latitude <- dmsAsDouble(df$szerokość.geograficzna)
   longitude <- dmsAsDouble(df$długość.geograficzna)
   res <- data.frame(latitude, longitude)
-  res$id <-
-    df$id <-
-    lapply(as.numeric(
-      removeLastChar(
-        df$identyfikator.jednostki.podziału.idorialnego.kraju
-      )
-    ), "[", 1)
+  res$id <- df$id <- lapply(df$identyfikator.jednostki.podziału.terytorialnego.kraju, convertToId)
   
   big <- lapply(list("Warszawa", "Łódź", "Kraków"), function(name) {
     return(list(name = name, id = df[df$nazwa.główna == name &
@@ -72,15 +67,10 @@ cities <-
         by.y = "id")
 cities <- cities[,c(1,2,4,3,5,6)]
 
-require("RPostgreSQL")
-
-drv <- dbDriver("PostgreSQL")
-con <- dbConnect(drv, dbname = "poland",
-                 host = "localhost", port = 5432,
-                 user = "postgres", password = "pswd")
+db <- psql()
+con <- db$connect()
 
 dbSendQuery(con, "truncate cities cascade")
 dbWriteTable(con, "cities", value = cities, append = TRUE, row.names = FALSE)
 
-dbDisconnect(con)
-dbUnloadDriver(drv)
+db$disconnect()
