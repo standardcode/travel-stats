@@ -17,6 +17,11 @@ select c1.name as start, c2.name as destination, r.distance, r.duration
  from routes r inner join cities c1 on r.from = c1.id inner join cities c2 on r.to = c2.id
  order by r.distance desc limit 10;
 
+-- Like above, but by time and results in km and hours.
+select c1.name as start, c2.name as destination, r.distance/1000, r.duration/3600
+ from routes r inner join cities c1 on r.from = c1.id inner join cities c2 on r.to = c2.id
+ order by r.duration desc limit 10;
+
 -- Closest cities pairs
 select c1.name as start, c2.name as destination, r.distance, r.duration
  from routes r inner join cities c1 on r.from = c1.id inner join cities c2 on r.to = c2.id

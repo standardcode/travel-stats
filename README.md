@@ -10,6 +10,28 @@ Main question: What is the average driving time/distance from one city to reach 
 ![Map of cities](./img/driving-time.png)
 Each dot is a city and color indicates average driving time from this city to a random person in any other city in the country. This calculation does not cover villages.
 
+Longest driving time between 2 cities
+
+       start       |  destination  |    km   |    h
+    Ustrzyki Dolne |   Kołobrzeg   | 1013.51 | 11.318
+
+Shortest way between 2 cities
+
+         start    | destination |   m    |   s
+    Podkowa Leśna |   Brwinów   | 2772.8 | 252.8
+
+City with shortest average driving time to other cities
+
+      name  |   h   |    km     
+    Stryków | 2.596 | 244.384
+ 
+City with longest average driving time to other cities
+
+         name      |   h   |    km     
+    Ustrzyki Dolne | 6.347 | 508.290
+
+`examples.sql` contains queries used to generate this statistics and more.
+ 
 ### Getting Started
 
 #### Database
@@ -39,6 +61,7 @@ Set number of cities you want to calculate. There is 919 cities and calculations
 
 Run calculation.
 ```shell
+$ npm install
 $ npm run build && npm run serve
 ```
 
