@@ -1,8 +1,9 @@
 import { Observable } from 'rxjs/Rx';
 import pgp from 'pg-promise';
 import { partialRight } from "lodash";
+import { dbServer } from "./config";
 
-const connect = () => pgp()("postgres://postgres:pswd@localhost:5432/poland");
+const connect = () => pgp()(dbServer);
 
 export const execute = (query, params = [], method = "none") => {
     const db = connect();
