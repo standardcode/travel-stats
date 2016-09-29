@@ -44,8 +44,9 @@ City with longest average driving time to other cities
 #### Data
 
 * Download XLS files from this sites:
-  * [Population](http://stat.gov.pl/obszary-tematyczne/ludnosc/ludnosc/powierzchnia-i-ludnosc-w-przekroju-terytorialnym-w-2016-r-,7,13.html) link _Powierzchnia i ludność w przekroju terytorialnym w 2016 r. - tablice_
+  * [Cities population](http://stat.gov.pl/obszary-tematyczne/ludnosc/ludnosc/powierzchnia-i-ludnosc-w-przekroju-terytorialnym-w-2016-r-,7,13.html) link _Powierzchnia i ludność w przekroju terytorialnym w 2016 r. - tablice_
   * [Geolocation](http://www.codgik.gov.pl/index.php/darmowe-dane/prng.html) link _PRNG - nazwy miejscowości_
+  * [Villages population](http://demografia.lo.pl/) (optional) link _Pobierz_
 
 * Convert them to CSV.
 * Run `prepare-cities.R` with working directory pointing the converted files.

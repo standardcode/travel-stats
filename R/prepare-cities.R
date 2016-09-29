@@ -6,6 +6,12 @@ convertToId <- function(text) {
   return(as.integer(substr(text, 1, nchar(text) - 1)))
 }
 
+extractCommunity <- function(text) {
+  elements <- strsplit(as.character(text), "-")
+  elements <- unlist(elements)
+  return(paste(elements[-length(elements)], collapse = "-"))
+}
+
 readPopulation <- function(big) {
   df <-
     read.csv(
@@ -44,33 +50,78 @@ readGeolocation <- function() {
       read.csv("miejscowosci.csv"),
       read.csv("miejscowosci_1.csv")
     ))
-  df <- df[df$rodzaj.obiektu == "miasto",]
-  latitude <- dmsAsDouble(df$szerokość.geograficzna)
-  longitude <- dmsAsDouble(df$długość.geograficzna)
-  res <- data.frame(latitude, longitude)
-  res$id <- df$id <- lapply(df$identyfikator.jednostki.podziału.terytorialnego.kraju, convertToId)
-  
+  df$id <-
+    lapply(df$identyfikator.jednostki.podziału.terytorialnego.kraju,
+           convertToId)
+  parse <- function (df) {
+    latitude <- dmsAsDouble(df$szerokość.geograficzna)
+    longitude <- dmsAsDouble(df$długość.geograficzna)
+    res <- data.frame(latitude, longitude, name = df$nazwa.główna)
+    res$id <- df$id
+    res$gmina <- df$gmina
+    
+    return(as.data.frame(lapply(res, function(X)
+      unname(unlist(
+        X
+      )))))
+  }
   big <- lapply(list("Warszawa", "Łódź", "Kraków"), function(name) {
     return(list(name = name, id = df[df$nazwa.główna == name &
-                                          df$rodzaj.obiektu == "miasto"]$id))
+                                       df$rodzaj.obiektu == "miasto"]$id))
   })
-  res <- as.data.frame(lapply(res, function(X)
-    unname(unlist(X))))
-  return(list(geo = res, big = big))
+  cities <- parse(df[df$rodzaj.obiektu == "miasto", ])
+  villages <- parse(df[df$rodzaj.obiektu == "wieś", ])
+  return(list(
+    cities = cities,
+    villages = villages,
+    big = big
+  ))
+}
+
+readVillagesPopulation <- function() {
+  demography <-
+    read.csv(
+      "Demografia_Polski_2015.csv",
+      header = FALSE,
+      skip = 4547,
+      col.names = c("name", "", "", "", "community", "", "", "", "", "population", "")
+    )
+  demography <- demography[demography$population != "", ]
+  demography$population <-
+    as.integer(gsub("\\s+", "", demography$population))
+  return(demography[, c("name", "community", "population")])
+}
+
+prepareVillages <- function(villages) {
+  villages$community <- lapply(villages$gmina, extractCommunity)
+  return(villages)
 }
 
 geo <- readGeolocation()
 cities <-
   merge(readPopulation(geo$big),
-        geo$geo,
+        geo$cities,
         by.x = "id",
         by.y = "id")
-cities <- cities[,c(1,2,4,3,5,6)]
+cities <- cities[, c(1, 2, 4, 3, 5, 6)]
+
+villages <-
+  merge(prepareVillages(geo$villages), readVillagesPopulation())
+villages <- villages[, c(5, 1, 7, 3, 4)]
 
 db <- psql()
 con <- db$connect()
 
 dbSendQuery(con, "truncate cities cascade")
 dbWriteTable(con, "cities", value = cities, append = TRUE, row.names = FALSE)
+
+dbSendQuery(con, "truncate villages cascade")
+dbWriteTable(
+  con,
+  "villages",
+  value = villages,
+  append = TRUE,
+  row.names = FALSE
+)
 
 db$disconnect()

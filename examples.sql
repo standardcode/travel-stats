@@ -52,3 +52,9 @@ SELECT c1.name, (sum(r.distance/r.circle*c2.population))/total AS ratio
  routes r INNER JOIN cities c1 ON r.from = c1.id INNER JOIN cities c2 ON r.to = c2.id
  GROUP BY c1.id, total
  ORDER BY ratio DESC LIMIT 10;
+
+-- Highest velocity routes
+SELECT c1.name AS start, c2.name AS destination, r.distance/1000 as distance, r.duration/3600 as duration,
+ (3600.0/1000)*(r.distance/r.duration) AS velocity
+ FROM routes r INNER JOIN cities c1 ON r.from = c1.id INNER JOIN cities c2 ON r.to = c2.id
+ ORDER BY velocity DESC LIMIT 10;

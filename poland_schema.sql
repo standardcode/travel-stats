@@ -87,6 +87,19 @@ ALTER TABLE ONLY routes
     ADD CONSTRAINT to_key FOREIGN KEY ("to") REFERENCES cities(id);
 
 
+-- Optional table for villages
+
+CREATE TABLE villages (
+    id integer NOT NULL,
+    name character varying NOT NULL,
+    population integer NOT NULL,
+    latitude double precision NOT NULL,
+    longitude double precision NOT NULL
+);
+
+
+ALTER TABLE villages OWNER TO postgres;
+
 --
 -- Name: public; Type: ACL; Schema: -; Owner: postgres
 --
