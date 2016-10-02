@@ -20,7 +20,7 @@ export const alignPoints = (cities) => {
                     location: result.waypoints[0].location
                 }
             })
-    }).concatAll();
+    }).mergeAll();
 };
 
 export const calculateRoutes = (alignedPoints) => {
@@ -36,7 +36,7 @@ export const calculateRoutes = (alignedPoints) => {
                         duration: route.duration // seconds
                     }
                 })
-        }).concatAll();
+        }).mergeAll();
     }).concatAll().scan((acc, v, i) => {
         console.log(`${(100 * (i + 1) / alignedPoints.length / (alignedPoints.length - 1)).toFixed(2)}%`);
         return v;
