@@ -103,7 +103,7 @@ cities <-
         geo$cities,
         by.x = "id",
         by.y = "id")
-cities <- cities[, c(1, 2, 4, 3, 5, 6)]
+cities <- cities[, c(1, 2, 3, 4, 5, 6)]
 
 villages <-
   merge(prepareVillages(geo$villages), readVillagesPopulation())
