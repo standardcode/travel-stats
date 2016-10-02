@@ -1,13 +1,12 @@
 import { Observable } from 'rxjs/Rx';
-import request from "request";
 
-export default (url) => Observable.defer(() => Observable.create((observer) => {
-    request(url, function (error, response, body) {
+export default (request) => (parameters) => Observable.create((observer) => {
+    request(parameters, function (error, response) {
         if (!error) {
-            observer.next(JSON.parse(body));
+            observer.next(response);
             observer.complete();
         } else {
             observer.error(error);
         }
     });
-}));
+});

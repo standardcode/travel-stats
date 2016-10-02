@@ -1,6 +1,8 @@
 export const numberOfCities = 6; // number all of cities is 919, but this may take long time to calculate them all.
-export const osrmServer = "http://localhost:5000";
-export const dbServer = "postgres://postgres:pswd@localhost:5432/poland";
+export const osrmFile = "poland-latest.osrm";
+export const dbServer = "postgres://postgres:pswd@localhost:5432/polandcopy";
 
 export const log = console.log;
 export const logger = (data) => () => log(data);
+
+process.env.UV_THREADPOOL_SIZE = Math.ceil(require("os").cpus().length * 1.5); // https://github.com/Project-OSRM/node-osrm/issues/189#issuecomment-218845413
