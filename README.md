@@ -55,7 +55,8 @@ City with longest average driving time to other cities
 
 * Build [OSRM](https://github.com/Project-OSRM/osrm-backend).
 * Download [map of Poland](http://download.geofabrik.de/europe/poland-latest.osm.pbf). Mirrors with [other maps](http://wiki.openstreetmap.org/wiki/Planet.osm).
-* Set host of the server in `js/config.js`.
+* Convert map to `.osrm`. 
+* Set path to the file in `js/config.js`.
 
 #### Running
 
