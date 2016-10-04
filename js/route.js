@@ -3,6 +3,8 @@ import server from "./get";
 import { osrmFile } from "./config";
 import OSRM from "osrm";
 
+const concurrent = 64;
+
 console.time("Map");
 const osrm = new OSRM(osrmFile);
 console.timeEnd("Map");
@@ -17,7 +19,7 @@ export const alignPoints = (cities) => {
             population: city.population,
             location: result.waypoints[0].location
         }))
-    ).mergeAll();
+    ).mergeAll(concurrent);
 };
 
 export const calculateRoutes = (alignedPoints) => {
@@ -31,8 +33,8 @@ export const calculateRoutes = (alignedPoints) => {
                     distance: route.distance, // meters
                     duration: route.duration // seconds
                 }))
-        ).mergeAll()
-    ).concatAll().scan((acc, v, i) => {
+        ).mergeAll(concurrent/8)
+    ).mergeAll(8).scan((acc, v, i) => {
         console.log(`${(100 * (i + 1) / alignedPoints.length / (alignedPoints.length - 1)).toFixed(2)}%`);
         return v;
     });
