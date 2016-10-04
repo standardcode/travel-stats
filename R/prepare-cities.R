@@ -1,6 +1,7 @@
 library("data.table")
 library("sp")
-source("db.R")
+library("dplyr")
+source("R/db.R")
 
 convertToId <- function(text) {
   return(as.integer(substr(text, 1, nchar(text) - 1)))
@@ -69,8 +70,8 @@ readGeolocation <- function() {
     return(list(name = name, id = df[df$nazwa.główna == name &
                                        df$rodzaj.obiektu == "miasto"]$id))
   })
-  cities <- parse(df[df$rodzaj.obiektu == "miasto", ])
-  villages <- parse(df[df$rodzaj.obiektu == "wieś", ])
+  cities <- parse(df[df$rodzaj.obiektu == "miasto",])
+  villages <- parse(df[df$rodzaj.obiektu == "wieś",])
   return(list(
     cities = cities,
     villages = villages,
@@ -86,7 +87,7 @@ readVillagesPopulation <- function() {
       skip = 4547,
       col.names = c("name", "", "", "", "community", "", "", "", "", "population", "")
     )
-  demography <- demography[demography$population != "", ]
+  demography <- demography[demography$population != "",]
   demography$population <-
     as.integer(gsub("\\s+", "", demography$population))
   return(demography[, c("name", "community", "population")])
@@ -108,6 +109,8 @@ cities <- cities[, c(1, 2, 3, 4, 5, 6)]
 villages <-
   merge(prepareVillages(geo$villages), readVillagesPopulation())
 villages <- villages[, c(5, 1, 7, 3, 4)]
+villages <- villages[order(villages$id, villages$name), ]
+villages$id <- villages$id * 100 + sequence(count_(villages, ~ id)$n)
 
 db <- psql()
 con <- db$connect()

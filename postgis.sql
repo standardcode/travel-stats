@@ -2,6 +2,8 @@
 SELECT AddGeometryColumn ('cities','point',4326,'POINT',2);
 UPDATE cities SET point = ST_SetSRID(ST_MakePoint(longitude, latitude), 4326);
 
+SELECT AddGeometryColumn ('villages','point',4326,'POINT',2);
+UPDATE villages SET point = ST_SetSRID(ST_MakePoint(longitude, latitude), 4326);
 
 -- Great-circle distance for further calculations
 ALTER TABLE public.routes
