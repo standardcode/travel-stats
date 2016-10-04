@@ -97,8 +97,10 @@ CREATE TABLE villages (
     longitude double precision NOT NULL
 );
 
-
 ALTER TABLE villages OWNER TO postgres;
+
+ALTER TABLE ONLY villages
+    ADD CONSTRAINT villages_pkey PRIMARY KEY (id);
 
 --
 -- Name: public; Type: ACL; Schema: -; Owner: postgres
@@ -113,4 +115,12 @@ GRANT ALL ON SCHEMA public TO PUBLIC;
 --
 -- PostgreSQL database dump complete
 --
+
+CREATE MATERIALIZED VIEW cities_stats AS SELECT c1.id,
+    sum(r.duration*c2.population)/total AS duration,
+    sum(r.distance*c2.population)/total AS distance
+    FROM (SELECT sum(population) AS total FROM cities c INNER JOIN routes r ON r.to = c.id GROUP BY r.from LIMIT 1) AS total,
+    routes r INNER JOIN cities c1 ON r.from = c1.id INNER JOIN cities c2 ON r.to = c2.id
+    GROUP BY c1.id, total
+    ORDER BY c1.id;
 
