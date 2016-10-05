@@ -1,9 +1,8 @@
 import { Observable } from 'rxjs/Rx';
 import server from "./get";
 import { osrmFile } from "./config";
+import { grow } from "./util";
 import OSRM from "osrm";
-
-const concurrent = 64;
 
 console.time("Map");
 const osrm = new OSRM(osrmFile);
@@ -19,11 +18,12 @@ export const alignPoints = (cities) => {
             population: city.population,
             location: result.waypoints[0].location
         }))
-    ).mergeAll(concurrent);
+    ).mergeAll(64);
 };
 
 export const calculateRoutes = (alignedPoints) => {
     const route = server(osrm.route.bind(osrm));
+    const concurrent = grow(3, 7);
     return Observable.from(alignedPoints).map(start =>
         Observable.from(alignedPoints).filter(destination => destination !== start).map(destination =>
             route({ coordinates: [start.location, destination.location], overview: "false" })
@@ -33,8 +33,8 @@ export const calculateRoutes = (alignedPoints) => {
                     distance: route.distance, // meters
                     duration: route.duration // seconds
                 }))
-        ).mergeAll(concurrent/8)
-    ).mergeAll(8).scan((acc, v, i) => {
+        ).mergeAll(concurrent())
+    ).mergeAll(5).scan((acc, v, i) => {
         console.log(`${(100 * (i + 1) / alignedPoints.length / (alignedPoints.length - 1)).toFixed(2)}%`);
         return v;
     });
