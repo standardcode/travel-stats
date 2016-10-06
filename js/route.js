@@ -3,6 +3,7 @@ import server from "./get";
 import { osrmFile } from "./config";
 import { grow } from "./util";
 import { selectCitiesAround } from "./store";
+import { numberOfCities } from "./config";
 import OSRM from "osrm";
 
 console.time("Map");
@@ -43,23 +44,19 @@ export const calculateRoutes = (alignedPoints) => {
 
 const duration = ({ duration, destination }) => duration + destination.duration;
 
-export const calculateVillagesRoutes = (villages) => {
-    const route = server(osrm.route.bind(osrm));
-    return Observable.from(villages).map(start =>
-        selectCitiesAround(start.id).flatMap(destinations =>
-            Observable.from(destinations).flatMap(destination =>
-                route({
-                    coordinates: [start.location, [destination.longitude, destination.latitude]],
-                    overview: "false"
-                }).map(({ routes: [route] }) => ({
-                    start,
-                    destination,
-                    distance: route.distance, // meters
-                    duration: route.duration // seconds
-                }))
-            ).min((a, b) => duration(a) - duration(b) )
-        )).mergeAll(8).scan((acc, v, i) => {
-            console.log(`${(100 * (i + 1) / villages.length).toFixed(2)}%`);
-            return v;
-        });
-};
+const route = server(osrm.route.bind(osrm));
+
+export const calculateVillagesRoutes = (start, i) =>
+    selectCitiesAround(start.id).flatMap(destinations =>
+        Observable.from(destinations).flatMap(destination =>
+            route({
+                coordinates: [start.location, [destination.longitude, destination.latitude]],
+                overview: "false"
+            }).map(({ routes: [route] }) => ({
+                start,
+                destination,
+                distance: route.distance, // meters
+                duration: route.duration // seconds
+            }))
+        ).min((a, b) => duration(a) - duration(b)).do(() => console.log(`${(100 * (i + 1) / numberOfCities).toFixed(2)}%`))
+    );
