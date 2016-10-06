@@ -102,6 +102,14 @@ ALTER TABLE villages OWNER TO postgres;
 ALTER TABLE ONLY villages
     ADD CONSTRAINT villages_pkey PRIMARY KEY (id);
 
+
+CREATE TABLE villages_routes (
+    duration double precision NOT NULL,
+    distance double precision NOT NULL,
+    "from" integer NOT NULL,
+    "to" integer NOT NULL
+);
+
 --
 -- Name: public; Type: ACL; Schema: -; Owner: postgres
 --
@@ -123,4 +131,3 @@ CREATE MATERIALIZED VIEW cities_stats AS SELECT c1.id,
     routes r INNER JOIN cities c1 ON r.from = c1.id INNER JOIN cities c2 ON r.to = c2.id
     GROUP BY c1.id, total
     ORDER BY c1.id;
-

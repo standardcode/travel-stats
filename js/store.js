@@ -1,18 +1,39 @@
 import { execute, select, insert } from "./db";
 
-export const clearRoutes = (routes) => execute("truncate routes;");
+class Queries {
+    constructor(table) {
+        this.table = table;
 
-export const selectCities = (number) => select(
-    'select * from cities order by population desc limit $1',
-    [number]
-);
+        this.updateCoordinates = insert(
+            `update ${this.table} set longitude = $1, latitude = $2 where id = $3`,
+            c => c.location.concat([c.id])
+        );
 
-export const storeRoutes = insert(
-    'insert into routes("from", "to", distance, duration) values($1, $2, $3, $4)',
-    r => [r.start.id, r.destination.id, r.distance, r.duration]
-);
+        this.storeRoutes = insert(
+            `insert into ${this.table}_routes("from", "to", distance, duration) values($1, $2, $3, $4)`,
+            r => [r.start.id, r.destination.id, r.distance, r.duration]
+        );
+    }
 
-export const updateCities = insert(
-    'update cities set longitude = $1, latitude = $2 where id = $3 ',
-    c => c.location.concat([c.id])
+    clearRoutes() {
+        return execute(`truncate ${this.table}_routes;`)
+    }
+
+    select(number) {
+        return select(
+            `select * from ${this.table} order by population desc limit $1`,
+            [number]
+        );
+    }
+}
+
+export const cities = new Queries("cities");
+
+export const villages = new Queries("villages");
+
+export const selectCitiesAround = (id) => select(
+    `SELECT c.id, c.name, c.latitude, c.longitude, ST_Distance(c.point, v.point) AS distance, cs.duration
+FROM villages v, cities c INNER JOIN cities_stats cs ON c.id = cs.id WHERE v.id = $1
+ORDER BY c.point <-> v.point LIMIT 10;`,
+    [id]
 );
