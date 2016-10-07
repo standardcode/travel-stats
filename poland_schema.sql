@@ -124,10 +124,17 @@ GRANT ALL ON SCHEMA public TO PUBLIC;
 -- PostgreSQL database dump complete
 --
 
-CREATE MATERIALIZED VIEW cities_stats AS SELECT c1.id,
-    sum(r.duration*c2.population)/total AS duration,
-    sum(r.distance*c2.population)/total AS distance
-    FROM (SELECT sum(population) AS total FROM cities c INNER JOIN routes r ON r.to = c.id GROUP BY r.from LIMIT 1) AS total,
+CREATE MATERIALIZED VIEW hinterland AS
+    SELECT r.to AS id, sum(v.population) AS population, sum(r.duration*v.population)/sum(v.population) AS duration
+    FROM villages_routes r INNER JOIN villages v ON r.from = v.id
+    GROUP BY r.to;
+
+CREATE MATERIALIZED VIEW cities_stats AS
+    SELECT c1.id,
+    (sum(r.duration*c2.population)+sum((r.duration+h.duration)*h.population))/total AS duration
+    FROM
+    (SELECT (SELECT sum(population) AS total FROM cities c INNER JOIN routes r ON r.to = c.id GROUP BY r.from LIMIT 1) +
+            (SELECT sum(population) AS total FROM hinterland LIMIT 1) AS total) AS total,
     routes r INNER JOIN cities c1 ON r.from = c1.id INNER JOIN cities c2 ON r.to = c2.id
-    GROUP BY c1.id, total
-    ORDER BY c1.id;
+    INNER JOIN hinterland h ON c2.id = h.id
+    GROUP BY c1.id, total;

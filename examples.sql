@@ -58,3 +58,8 @@ SELECT c1.name AS start, c2.name AS destination, r.distance/1000 as distance, r.
  (3600.0/1000)*(r.distance/r.duration) AS velocity
  FROM routes r INNER JOIN cities c1 ON r.from = c1.id INNER JOIN cities c2 ON r.to = c2.id
  ORDER BY velocity DESC LIMIT 10;
+
+-- Average driving time from cities to other people from cities and villages
+SELECT c.id, c.name, cs.duration/3600 AS duration
+    FROM cities c INNER JOIN cities_stats cs ON cs.id = c.id
+    ORDER BY duration;

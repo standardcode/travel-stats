@@ -2,17 +2,23 @@
 #install.packages("mapproj")
 library("ggplot2")
 library("mapproj")
-source("db.R")
+library("data.table")
+source("R/db.R")
 
 db <- psql()
 con <- db$connect()
-q <- "select c1.name, c1.latitude, c1.longitude, c1.population,
-sum(r.duration*c2.population)/total/3600 as duration
-from (select sum(population) as total from cities c inner join routes r on r.to = c.id group by r.from limit 1) as total,
-routes r inner join cities c1 on r.from = c1.id inner join cities c2 on r.to = c2.id
-group by c1.id, total
-order by duration;"
-df <- dbGetQuery(con, q)
+q <- "SELECT c.id, c.name, c.latitude, c.longitude, c.population, cs.duration/3600 AS duration
+FROM cities c INNER JOIN cities_stats cs ON cs.id = c.id
+ORDER BY duration;"
+cities <- dbGetQuery(con, q)
+
+q <- "SELECT v.name, v.latitude, v.longitude, v.population,
+(cs.duration + r.duration)/3600 AS duration
+FROM villages_routes r INNER JOIN villages v ON r.from = v.id INNER JOIN cities_stats cs ON r.to = cs.id
+ORDER BY duration DESC;"
+villages <- dbGetQuery(con, q)
+
+df <- rbindlist(list(cities, villages), use.names = TRUE, fill = TRUE)
 
 ggplot(df, aes(x = longitude, y = latitude, label = name)) +
   geom_point(aes(size = population / 1000, color = duration), alpha = .8) +
