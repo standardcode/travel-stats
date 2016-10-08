@@ -1,7 +1,4 @@
-export const accumulator = (acc, city) => {
-    acc.push(city);
-    return acc;
-};
+export const accumulator = (acc, v) => [...acc, v];
 
 export const grow = (min, max) => {
     let i = min;

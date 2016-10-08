@@ -3,7 +3,6 @@ import server from "./get";
 import { osrmFile } from "./config";
 import { grow } from "./util";
 import { selectCitiesAround } from "./store";
-import { numberOfCities } from "./config";
 import OSRM from "osrm";
 
 console.time("Map");
@@ -36,13 +35,8 @@ export const calculateRoutes = (alignedPoints) => {
                     duration: route.duration // seconds
                 }))
         ).mergeAll(concurrent())
-    ).mergeAll(5).scan((acc, v, i) => {
-        console.log(`${(100 * (i + 1) / alignedPoints.length / (alignedPoints.length - 1)).toFixed(2)}%`);
-        return v;
-    });
+    ).mergeAll(5);
 };
-
-const duration = ({ duration, destination }) => duration + destination.duration;
 
 const route = server(osrm.route.bind(osrm));
 
@@ -58,5 +52,5 @@ export const calculateVillagesRoutes = (start, i) =>
                 distance: route.distance, // meters
                 duration: route.duration // seconds
             }))
-        ).min((a, b) => duration(a) - duration(b)).do(() => console.log(`${(100 * (i + 1) / numberOfCities).toFixed(2)}%`))
+        ).min((a, b) => a.duration - b.duration)
     );

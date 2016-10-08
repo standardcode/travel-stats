@@ -53,7 +53,7 @@ ALTER TABLE cities OWNER TO postgres;
 -- Name: routes; Type: TABLE; Schema: public; Owner: postgres
 --
 
-CREATE TABLE routes (
+CREATE TABLE cities_routes (
     duration double precision NOT NULL,
     distance double precision NOT NULL,
     "from" integer NOT NULL,
@@ -61,7 +61,7 @@ CREATE TABLE routes (
 );
 
 
-ALTER TABLE routes OWNER TO postgres;
+ALTER TABLE cities_routes OWNER TO postgres;
 
 --
 -- Name: cities_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
@@ -75,16 +75,16 @@ ALTER TABLE ONLY cities
 -- Name: from_key; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
-ALTER TABLE ONLY routes
-    ADD CONSTRAINT from_key FOREIGN KEY ("from") REFERENCES cities(id);
+ALTER TABLE ONLY cities_routes
+    ADD CONSTRAINT cities_from_key FOREIGN KEY ("from") REFERENCES cities(id);
 
 
 --
 -- Name: to_key; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
-ALTER TABLE ONLY routes
-    ADD CONSTRAINT to_key FOREIGN KEY ("to") REFERENCES cities(id);
+ALTER TABLE ONLY cities_routes
+    ADD CONSTRAINT cities_to_key FOREIGN KEY ("to") REFERENCES cities(id);
 
 
 -- Optional table for villages

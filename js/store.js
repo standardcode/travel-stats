@@ -37,3 +37,5 @@ FROM villages v, cities c INNER JOIN cities_stats cs ON c.id = cs.id WHERE v.id 
 ORDER BY c.point <-> v.point LIMIT 10;`,
     [id]
 );
+
+export const refreshHinterland = execute('REFRESH MATERIALIZED VIEW hinterland;');
