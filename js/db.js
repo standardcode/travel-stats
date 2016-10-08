@@ -5,7 +5,7 @@ import { dbServer } from "./config";
 
 const connect = () => pgp()(dbServer);
 
-export const execute = (query, params = [], method = "none") => {
+const exec = (query, params = [], method = "none") => {
     const db = connect();
     return Observable.create(observer => {
         db[method](query, params).then((result) => {
@@ -15,7 +15,9 @@ export const execute = (query, params = [], method = "none") => {
     });
 };
 
-export const select = partialRight(execute, "any");
+export const execute = (query) => exec(query).ignoreElements();
+
+export const select = partialRight(exec, "any");
 
 export const insert = (query, unfold) => {
     const db = connect();

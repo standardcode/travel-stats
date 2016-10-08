@@ -1,7 +1,7 @@
 import { execute, select, insert } from "./db";
 
 class Queries {
-    constructor(table) {
+    constructor(table, cache) {
         this.table = table;
 
         this.updateCoordinates = insert(
@@ -13,6 +13,8 @@ class Queries {
             `insert into ${this.table}_routes("from", "to", distance, duration) values($1, $2, $3, $4)`,
             r => [r.start.id, r.destination.id, r.distance, r.duration]
         );
+
+        this.refresh = execute(`REFRESH MATERIALIZED VIEW ${cache}`);
     }
 
     clearRoutes() {
@@ -27,9 +29,9 @@ class Queries {
     }
 }
 
-export const cities = new Queries("cities");
+export const cities = new Queries("cities", "cities_stats");
 
-export const villages = new Queries("villages");
+export const villages = new Queries("villages", "hinterland");
 
 export const selectCitiesAround = (id) => select(
     `SELECT c.id, c.name, c.latitude, c.longitude, ST_Distance(c.point, v.point) AS distance, cs.duration
@@ -37,5 +39,3 @@ FROM villages v, cities c INNER JOIN cities_stats cs ON c.id = cs.id WHERE v.id 
 ORDER BY c.point <-> v.point LIMIT 10;`,
     [id]
 );
-
-export const refreshHinterland = execute('REFRESH MATERIALIZED VIEW hinterland;');

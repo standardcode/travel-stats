@@ -1,26 +1,27 @@
 import { noop } from "lodash";
 import { alignPoints, calculateRoutes, calculateVillagesRoutes } from './route';
 import { numberOfCities, numberOfVillages, log, logger } from "./config";
-import { cities, villages, refreshHinterland } from "./store";
+import { cities, villages } from "./store";
 import self from "./self";
 import { accumulator } from "./util";
 
 console.time("Done");
 
-const calcVillages = (queries, quantity) => queries.clearRoutes().ignoreElements()
+const prepare = (queries, quantity) => queries.clearRoutes()
     .concat(queries.select(quantity))
-    .do(logger("Find routes")).flatMap(alignPoints).flatMap(queries.updateCoordinates)
-    .flatMap(calculateVillagesRoutes)
+    .do(logger("Find routes")).flatMap(alignPoints).flatMap(queries.updateCoordinates);
+
+const collect = (observable, queries, quantity) => observable
     .flatMap(queries.storeRoutes)
     .map((v, i) => log(`${(100 * (i + 1) / quantity).toFixed(2)}%`)).ignoreElements()
-    .concat(refreshHinterland);
+    .concat(queries.refresh);
 
-const calcCities = (queries, quantity) => queries.clearRoutes().ignoreElements()
-    .concat(queries.select(quantity))
-    .do(logger("Find routes")).flatMap(alignPoints).flatMap(queries.updateCoordinates).reduce(accumulator, [])
-    .flatMap(cities => calculateRoutes(cities).merge(self(cities)))
-    .flatMap(queries.storeRoutes)
-    .map((v, i) => log(`${(100 * (i + 1) / quantity / quantity).toFixed(2)}%`)).ignoreElements();
+const calcVillages = (queries, quantity) =>
+    collect(prepare(queries, quantity).flatMap(calculateVillagesRoutes), queries, quantity)
+
+const calcCities = (queries, quantity) =>
+    collect(prepare(queries, quantity).reduce(accumulator, [])
+        .flatMap(cities => calculateRoutes(cities).merge(self(cities))), queries, quantity * quantity)
 
 calcVillages(villages, numberOfVillages)
     .concat(calcCities(cities, numberOfCities))

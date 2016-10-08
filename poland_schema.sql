@@ -135,6 +135,6 @@ CREATE MATERIALIZED VIEW cities_stats AS
     FROM
     (SELECT (SELECT sum(population) AS total FROM cities c INNER JOIN routes r ON r.to = c.id GROUP BY r.from LIMIT 1) +
             (SELECT sum(population) AS total FROM hinterland LIMIT 1) AS total) AS total,
-    routes r INNER JOIN cities c1 ON r.from = c1.id INNER JOIN cities c2 ON r.to = c2.id
+    cities_routes r INNER JOIN cities c1 ON r.from = c1.id INNER JOIN cities c2 ON r.to = c2.id
     INNER JOIN hinterland h ON c2.id = h.id
     GROUP BY c1.id, total;

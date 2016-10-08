@@ -1,4 +1,5 @@
-export const numberOfCities = 6; // number all of cities is 919, but this may take long time to calculate them all.
+export const numberOfCities = 15; // number all of cities is 919, but this may take long time to calculate them all.
+export const numberOfVillages = 60; // all 37177
 export const osrmFile = "poland-latest.osrm";
 export const dbServer = "postgres://postgres:pswd@localhost:5432/polandcopy";
 
