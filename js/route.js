@@ -22,35 +22,31 @@ export const alignPoints = (cities) => {
     ).mergeAll(64);
 };
 
-export const calculateRoutes = (alignedPoints) => {
-    const route = server(osrm.route.bind(osrm));
-    const concurrent = grow(3, 7);
-    return Observable.from(alignedPoints).map(start =>
-        Observable.from(alignedPoints).filter(destination => destination !== start).map(destination =>
-            route({ coordinates: [start.location, destination.location], overview: "false" })
-                .map(({ routes:[route] }) => ({
-                    start,
-                    destination,
-                    distance: route.distance, // meters
-                    duration: route.duration // seconds
-                }))
-        ).mergeAll(concurrent())
-    ).mergeAll(5);
-};
-
 const route = server(osrm.route.bind(osrm));
 
-export const calculateVillagesRoutes = (start, i) =>
-    selectCitiesAround(start.id).flatMap(destinations =>
-        Observable.from(destinations).flatMap(destination =>
-            route({
-                coordinates: [start.location, [destination.longitude, destination.latitude]],
-                overview: "false"
-            }).map(({ routes: [route] }) => ({
-                start,
-                destination,
-                distance: route.distance, // meters
-                duration: route.duration // seconds
-            }))
-        ).min((a, b) => a.duration - b.duration)
-    );
+const calculateRoutes = (start, destination, location) => //Observable.from(destinations).flatMap(destination =>
+    route({
+        coordinates: [start.location, location(destination)],
+        overview: "false"
+    }).map(({ routes: [route] }) => ({
+        start,
+        destination,
+        distance: route.distance, // meters
+        duration: route.duration // seconds
+    }));
+
+export const calculateCitiesRoutes = (cities) => {
+    const concurrent = grow(3, 7);
+    return Observable.from(cities).map(start =>
+        Observable.from(cities.filter(destination => destination !== start)).map(destination =>
+            calculateRoutes(start, destination, destination => destination.location)
+        ).mergeAll(9)
+    ).mergeAll(7);
+};
+
+export const calculateVillagesRoutes = (village, i) =>
+    selectCitiesAround(village.id).map(cities =>
+        Observable.from(cities).map(city =>
+            calculateRoutes(village, city, city => [city.longitude, city.latitude])
+        ).mergeAll(5).min((a, b) => a.duration - b.duration)
+    ).mergeAll(3);

@@ -1,5 +1,5 @@
 import { noop } from "lodash";
-import { alignPoints, calculateRoutes, calculateVillagesRoutes } from './route';
+import { alignPoints, calculateCitiesRoutes, calculateVillagesRoutes } from './route';
 import { numberOfCities, numberOfVillages, log, logger } from "./config";
 import { cities, villages } from "./store";
 import self from "./self";
@@ -17,11 +17,11 @@ const collect = (observable, queries, quantity) => observable
     .concat(queries.refresh);
 
 const calcVillages = (queries, quantity) =>
-    collect(prepare(queries, quantity).flatMap(calculateVillagesRoutes), queries, quantity)
+    collect(prepare(queries, quantity).flatMap(calculateVillagesRoutes), queries, quantity);
 
 const calcCities = (queries, quantity) =>
     collect(prepare(queries, quantity).reduce(accumulator, [])
-        .flatMap(cities => calculateRoutes(cities).merge(self(cities))), queries, quantity * quantity)
+        .flatMap(cities => calculateCitiesRoutes(cities).merge(self(cities))), queries, quantity * quantity);
 
 calcVillages(villages, numberOfVillages)
     .concat(calcCities(cities, numberOfCities))

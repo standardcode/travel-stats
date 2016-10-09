@@ -34,8 +34,8 @@ export const cities = new Queries("cities", "cities_stats");
 export const villages = new Queries("villages", "hinterland");
 
 export const selectCitiesAround = (id) => select(
-    `SELECT c.id, c.name, c.latitude, c.longitude, ST_Distance(c.point, v.point) AS distance, cs.duration
-FROM villages v, cities c INNER JOIN cities_stats cs ON c.id = cs.id WHERE v.id = $1
+    `SELECT c.id, c.name, c.latitude, c.longitude, ST_Distance(c.point, v.point) AS distance
+FROM villages v, cities c WHERE v.id = $1
 ORDER BY c.point <-> v.point LIMIT 10;`,
     [id]
 );
