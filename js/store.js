@@ -29,9 +29,9 @@ class Queries {
     }
 }
 
-export const cities = new Queries("cities", "cities_stats");
+export const citiesQueries = new Queries("cities", "cities_stats");
 
-export const villages = new Queries("villages", "hinterland");
+export const villagesQueries = new Queries("villages", "hinterland");
 
 export const selectCitiesAround = (id) => select(
     `SELECT c.id, c.name, c.latitude, c.longitude, ST_Distance(c.point, v.point) AS distance

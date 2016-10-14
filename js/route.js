@@ -24,7 +24,7 @@ export const alignPoints = (cities) => {
 
 const route = server(osrm.route.bind(osrm));
 
-const calculateRoutes = (start, destination, location) => //Observable.from(destinations).flatMap(destination =>
+const calculateRoutes = (start, destination, location) =>
     route({
         coordinates: [start.location, location(destination)],
         overview: "false"
