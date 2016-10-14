@@ -20,6 +20,8 @@ ORDER BY c.point <-> v.point LIMIT 10;`:
                 }));
                 break;
         }
-        return Promise.resolve(result);
+        return new Promise(function (resolve) {
+            setTimeout(() => resolve(result), 10 * Math.random());
+        });
     }
 });

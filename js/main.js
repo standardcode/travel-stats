@@ -42,9 +42,9 @@ export const save = (tables, settlements) => Observable.from(zip(
 )).map(([settlements, calc]) => calc(settlements)).mergeAll();
 
 export const main = (tables) => readyPoints(tables)
-    .flatMap(settlements => save(tables, settlements)).mergeAll();
+    .flatMap(settlements => save(tables, settlements))
 
-main([villages, cities]).subscribe(noop, log, () => {
+main([cities, villages]).subscribe(noop, log, () => {
     console.timeEnd("Done");
     process.exit();
 });

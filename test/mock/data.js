@@ -1,4 +1,8 @@
-export const villages = [{
+import _ from "lodash";
+
+const copy = list => _(0).range(10).map(i => list.map(v => ({ ...v, id: 10 * v.id + i }))).flatten().value();
+
+export const villages = copy([{
     id: 24020701,
     name: 'Kozy',
     population: 12660,
@@ -33,9 +37,9 @@ export const villages = [{
     latitude: 50.01668,
     longitude: 19.116785,
     point: '0101000020E6100000E7DDDDDDDD1D33402722222222024940'
-}];
+}]);
 
-export const cities = [{
+export const cities = copy([{
     id: 146510,
     name: 'Warszawa',
     population: 1744351,
@@ -59,4 +63,4 @@ export const cities = [{
     latitude: 51.750005,
     longitude: 19.450086,
     point: '0101000020E610000030630AD638733340126BF12900E04940'
-}];
+}]);

@@ -1,9 +1,16 @@
 import { Observable } from 'rxjs/Rx';
 import pgp from 'pg-promise';
 import { partialRight } from "lodash";
-import { dbServer } from "./config";
+import { dbServer, log } from "./config";
 
 const connect = () => pgp()(dbServer);
+
+function handleError(observer, query, params) {
+    return function (e) {
+        log(`Query: ${query}\nParameters: ${JSON.stringify(params)}`);
+        observer.error(e);
+    }
+}
 
 const exec = (query, params = [], method = "none") => {
     const db = connect();
@@ -11,7 +18,7 @@ const exec = (query, params = [], method = "none") => {
         db[method](query, params).then((result) => {
             observer.next(result);
             observer.complete();
-        })
+        }).catch(handleError(observer, query, params))
     });
 };
 
@@ -25,6 +32,6 @@ export const insert = (query, unfold) => {
         db.none(query, unfold(row)).then(() => {
             observer.next(row);
             observer.complete();
-        })
+        }).catch(handleError(observer, query, row))
     });
 };
