@@ -7,7 +7,7 @@ const connect = () => pgp()(dbServer);
 
 function handleError(observer, query, params) {
     return function (e) {
-        log(`Query: ${query}\nParameters: ${JSON.stringify(params)}`);
+        log(`Query: ${query}\nParameters: ${JSON.stringify(params)}\n`, e);
         observer.error(e);
     }
 }

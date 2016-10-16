@@ -1,7 +1,9 @@
 import { cities, villages } from "./data";
 
 export default () => () => ({
-    none: (query, parameters) => Promise.resolve(),
+    none: (query, parameters) =>  new Promise(function (resolve) {
+        setTimeout(resolve, 10 * Math.random());
+    }),
     any: (query, parameters) => {
         let result = [];
         switch (query) {

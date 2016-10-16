@@ -1,8 +1,12 @@
 import _ from "lodash";
+import { numberOfCities, numberOfVillages } from "../../js/config";
 
-const copy = list => _(0).range(10).map(i => list.map(v => ({ ...v, id: 10 * v.id + i }))).flatten().value();
+const copy = (limit, list) => _(0).range(10).map(i => list.map(v => ({
+    ...v,
+    id: 10 * v.id + i
+}))).flatten().value().slice(0, limit);
 
-export const villages = copy([{
+export const villages = copy(numberOfVillages, [{
     id: 24020701,
     name: 'Kozy',
     population: 12660,
@@ -39,7 +43,7 @@ export const villages = copy([{
     point: '0101000020E6100000E7DDDDDDDD1D33402722222222024940'
 }]);
 
-export const cities = copy([{
+export const cities = copy(numberOfCities, [{
     id: 146510,
     name: 'Warszawa',
     population: 1744351,

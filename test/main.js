@@ -1,17 +1,17 @@
 import { expect } from 'chai';
 import mockery from "mockery";
 import { Observable } from 'rxjs/Rx';
-import { noop } from "lodash";
+import { noop, flatten } from "lodash";
 import pgp from "./mock/pg-promise.mock";
 import osrm from "./mock/osrm.mock";
 import { cities, villages } from "./mock/data";
-import { numberOfVillages } from "../js/config";
 
 const crash = (err) => {
     throw err
 };
 
-describe('main', () => {
+describe('main', function() {
+    this.timeout(5000)
     let main;
     before(() => {
         mockery.enable({
@@ -30,7 +30,8 @@ describe('main', () => {
     it('should align points', (done) => {
         const all = [];
         main.villages.alignPoints().subscribe(all.push.bind(all), crash, () => {
-            expect(all.map(s => s.id)).to.eql(villages.map(v => v.id).slice(0, numberOfVillages));
+            expect(all).to.have.lengthOf(villages.length);
+            expect(all.map(s => s.id)).to.have.members(villages.map(v => v.id));
             done();
         });
     });
@@ -92,7 +93,7 @@ describe('main', () => {
             save: (settlements) => Observable.of(settlements)
         });
         main.main([table(villages), table(cities)]).subscribe(all.push.bind(all), crash, () => {
-            expect(all).to.eql(cities.concat(villages));
+            expect(flatten(all)).to.eql(cities.concat(villages));
             done();
         });
     });

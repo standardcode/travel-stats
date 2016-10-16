@@ -8,24 +8,28 @@ import { Observable } from 'rxjs/Rx';
 
 console.time("Done");
 
-const prepare = (queries, quantity) => queries.clearRoutes()
-    .concat(queries.select(quantity)).flatMap(alignPoints).flatMap(queries.updateCoordinates);
+const prepare = function (quantity) {
+    return this.clearRoutes()
+        .concat(this.select(quantity)).flatMap(alignPoints).flatMap(this.updateCoordinates);
+};
 
-const collect = (observable, queries, quantity) => observable
-    .flatMap(queries.storeRoutes)
-    .map((v, i) => {
-        log(`${(100 * (i + 1) / quantity).toFixed(2)}%`);
-        return v;
-    }).concat(queries.refresh);
+const collect = function (queries, quantity) {
+    return this
+        .flatMap(queries.storeRoutes)
+        .map((v, i) => {
+            log(`${(100 * (i + 1) / quantity).toFixed(2)}%`);
+            return v;
+        })
+};
 
 const calcVillages = (queries, quantity) => ({
-    alignPoints: () => prepare(queries, quantity),
-    save: (villages) => collect(Observable.from(villages).flatMap(calculateVillagesRoutes), queries, quantity)
+    alignPoints: () => queries::prepare(quantity),
+    save: (villages) => Observable.from(villages).flatMap(calculateVillagesRoutes)::collect(queries, quantity)
 });
 
 const calcCities = (queries, quantity) => ({
-    alignPoints: () => prepare(queries, quantity),
-    save: (cities) => collect(calculateCitiesRoutes(cities).merge(self(cities)), queries, quantity * quantity)
+    alignPoints: () => queries::prepare(quantity),
+    save: (cities) => calculateCitiesRoutes(cities).merge(self(cities))::collect(queries, quantity * quantity)
 });
 
 export const villages = calcVillages(villagesQueries, numberOfVillages);
@@ -42,7 +46,13 @@ export const save = (tables, settlements) => Observable.from(zip(
 )).map(([settlements, calc]) => calc(settlements)).mergeAll();
 
 export const main = (tables) => readyPoints(tables)
-    .flatMap(settlements => save(tables, settlements))
+    .flatMap(settlements => save(tables, settlements)).concat(
+        Observable.merge(
+            Observable.defer(villagesQueries.refresh),
+            Observable.defer(citiesQueries.refresh)
+        )
+    );
+
 
 main([cities, villages]).subscribe(noop, log, () => {
     console.timeEnd("Done");

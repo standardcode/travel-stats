@@ -14,7 +14,7 @@ class Queries {
             r => [r.start.id, r.destination.id, r.distance, r.duration]
         );
 
-        this.refresh = execute(`REFRESH MATERIALIZED VIEW ${cache}`);
+        this.refresh = () => execute(`REFRESH MATERIALIZED VIEW ${cache}`);
     }
 
     clearRoutes() {

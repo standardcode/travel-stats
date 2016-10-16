@@ -1,7 +1,7 @@
 import { expect } from 'chai';
 import mockery from "mockery";
 import { Observable } from 'rxjs/Rx';
-import { noop } from "lodash";
+import { noop, sortBy } from "lodash";
 import osrm from "./mock/osrm.mock";
 import pgp from "./mock/pg-promise.mock";
 import { cities, villages } from "./mock/data";
@@ -25,16 +25,18 @@ describe('route', () => {
 
     it('should align points', (done) => {
         const cities = route.alignPoints([{
+            id: 1,
             longitude: 1,
             latitude: 2
         }, {
+            id: 2,
             longitude: 8,
             latitude: 5
         }]);
         expect(cities).to.be.an.instanceof(Observable);
         const all = [];
         cities.subscribe(all.push.bind(all), noop, () => {
-            expect(all.map(city => city.location)).to.eql([[1.5, 2.3], [8.5, 5.3]]);
+            expect(sortBy(all, "id").map(city => city.location)).to.eql([[1.5, 2.3], [8.5, 5.3]]);
             done();
         })
     });
