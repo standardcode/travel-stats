@@ -44,7 +44,7 @@ export const calculateCitiesRoutes = (cities) => {
     ).mergeAll(7);
 };
 
-export const calculateVillagesRoutes = (village, i) =>
+export const calculateVillagesRoutes = (village) =>
     selectCitiesAround(village.id).map(cities =>
         Observable.from(cities).map(city =>
             calculateRoutes(village, city, city => [city.longitude, city.latitude])

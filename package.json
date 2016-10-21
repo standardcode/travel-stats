@@ -7,11 +7,27 @@
     "start": "nodemon js/main.js --exec babel-node --presets es2015,stage-2",
     "build": "babel js -d dist",
     "serve": "node dist/main.js",
-    "test": "mocha --compilers js:babel-core/register --require babel-polyfill"
+    "mocha": "mocha --compilers js:babel-core/register --require babel-polyfill",
+    "test": "ava -w"
+  },
+  "ava": {
+    "files": [
+      "test/calc.js"
+    ],
+    "source": [
+      "js/**/*.{js,jsx}"
+    ],
+    "concurrency": 5,
+    "failFast": true,
+    "tap": true,
+    "powerAssert": false,
+    "require": "babel-register",
+    "babel": "inherit"
   },
   "author": "Łukasz Sutkowski",
   "license": "ISC",
   "devDependencies": {
+    "ava": "^0.16.0",
     "babel-cli": "^6.11.4",
     "babel-preset-es2015": "^6.16.0",
     "babel-preset-es2016": "^6.16.0",
