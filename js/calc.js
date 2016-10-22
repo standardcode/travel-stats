@@ -1,48 +1,48 @@
-import { Observable } from 'rxjs/Rx';
 import { alignPoints, calculateCitiesRoutes, calculateVillagesRoutes } from './route';
+import { citiesQueries, villagesQueries } from "./store";
 import self from "./self";
 import { log } from "./config";
+import { accumulator } from "./util";
+import { Observable } from 'rxjs/Rx';
 
-class Calc {
-    constructor(dao, quantity) {
-        this.dao = dao;
-        this.quantity = quantity;
-    }
-
+const Calc = (dao, quantity, complexity) => ({
     align() {
-        return this.dao.clearRoutes()
-            .concat(this.dao.select(this.quantity))
+        return dao.clearRoutes()
+            .concat(dao.select(quantity))
             .flatMap(alignPoints)
-            .flatMap(this.dao.updateCoordinates);
-    }
+            .flatMap(dao.updateCoordinates);
+    },
 
     store() {
-        return this
-            .flatMap(this.dao.storeRoutes)
-            .map((v, i) => {
-                const complexity = this.complexity();
-                log(`${(100 * (i + 1) / complexity).toFixed(2)}%`);
-                return v;
-            })
-    }
-}
+        return this.flatMap(dao.storeRoutes);
+    },
 
-export class Villages extends Calc {
-    routes(villages) {
-        return Observable.from(villages).flatMap(calculateVillagesRoutes);
+    get complexity() {
+        return complexity;
     }
+});
 
-    complexity() {
-        return this.quantity;
+export const Villages = (dao, quantity) => ({
+    ...Calc(dao, quantity, quantity),
+
+    routes() {
+        return this.flatMap(calculateVillagesRoutes);
     }
-}
+});
 
-export class Cities extends Calc {
+export const Cities = (dao, quantity) => ({
+    ...Calc(dao, quantity, quantity ** 2),
+
     routes(cities) {
         return calculateCitiesRoutes(cities).merge(self(cities));
     }
+});
 
-    complexity() {
-        return this.quantity ** 2;
-    }
-}
+export const main = (cities, villages) =>
+    cities.align().reduce(accumulator, []).flatMap(c => Observable.merge(
+        villages.align()::villages.routes()::villages.store(),
+        cities.routes(c)::cities.store()
+    )).map((v, i) => {
+        log(`${(100 * (i + 1) / (villages.complexity + cities.complexity)).toFixed(2)}%`);
+        return v;
+    }).concat(Observable.defer(() => villagesQueries.refresh().concat(citiesQueries.refresh())));

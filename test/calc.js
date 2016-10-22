@@ -2,6 +2,7 @@ import test from 'ava';
 import { expect } from 'chai';
 import mockery from "mockery";
 import { flatten } from "lodash";
+import { Observable } from 'rxjs/Rx';
 import pgp from "./mock/pg-promise.mock";
 import osrm from "./mock/osrm.mock";
 import { accumulator } from "../js/util";
@@ -21,14 +22,13 @@ test.beforeEach(t => {
     data.villages.forEach(v => v.location = [v.longitude, v.latitude]);
     data.cities.forEach(v => v.location = [v.longitude, v.latitude]);
     t.context = {
-        numberOfVillages,
-        numberOfCities,
         list: {
             villages: data.villages.slice(0, numberOfVillages),
             cities: data.cities.slice(0, numberOfCities)
         },
-        villages: new calc.Villages(store.villagesQueries, numberOfVillages),
-        cities: new calc.Cities(store.citiesQueries, numberOfCities)
+        villages: calc.Villages(store.villagesQueries, numberOfVillages),
+        cities: calc.Cities(store.citiesQueries, numberOfCities),
+        main: calc.main
     }
 });
 
@@ -46,7 +46,7 @@ test("align points", t => {
 test("calc villages routes", t => {
     const { villages, list } = t.context;
     t.plan(list.villages.length);
-    return villages.routes(list.villages).do(() => t.pass()).reduce(accumulator, [])
+    return Observable.from(list.villages)::villages.routes().do(() => t.pass()).reduce(accumulator, [])
         .map(all => expect(all.map(r => r.start.id)).to.have.members(list.villages.map(v => v.id)));
 });
 
@@ -58,8 +58,15 @@ test("calc cities routes", t => {
         .map(all => expect(all.map(r => [r.start.id, r.destination.id])).to.deep.have.members(matrix(list.cities)));
 });
 
-test("complexity", t => {
+test("store villages routes", t => {
     const { villages, list } = t.context;
-    t.deepEqual(villages.complexity(), list.villages.length)
+    t.plan(list.villages.length);
+    return villages.align()::villages.routes()::villages.store().do(() => t.pass()).reduce(accumulator, [])
+        .map(all => expect(all.map(r => r.start.id)).to.have.members(list.villages.map(v => v.id)));
 });
 
+test("main", t => {
+    const { main, list, villages, cities } = t.context;
+    t.plan(list.villages.length + list.cities.length ** 2);
+    return main(cities, villages).do(() => t.pass())
+});
