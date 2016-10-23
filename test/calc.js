@@ -1,12 +1,13 @@
 import test from 'ava';
 import { expect } from 'chai';
 import mockery from "mockery";
-import { flatten } from "lodash";
+import { noop, flatten } from "lodash";
 import { Observable } from 'rxjs/Rx';
 import pgp from "./mock/pg-promise.mock";
 import osrm from "./mock/osrm.mock";
 import { accumulator } from "../js/util";
 import * as data from "./mock/data";
+import { spy, assert } from "sinon";
 
 test.beforeEach(t => {
     mockery.enable({
@@ -28,7 +29,9 @@ test.beforeEach(t => {
         },
         villages: calc.Villages(store.villagesQueries, numberOfVillages),
         cities: calc.Cities(store.citiesQueries, numberOfCities),
-        main: calc.main
+        main: calc.main,
+        villagesQueries: store.villagesQueries,
+        citiesQueries: store.citiesQueries
     }
 });
 
@@ -69,4 +72,37 @@ test("main", t => {
     const { main, list, villages, cities } = t.context;
     t.plan(list.villages.length + list.cities.length ** 2);
     return main(cities, villages).do(() => t.pass())
+});
+
+test.only("main spy", t => {
+    const { main, list, villages, cities, villagesQueries, citiesQueries } = t.context;
+    spy(villagesQueries, "clearRoutes");
+    spy(citiesQueries, "clearRoutes");
+    spy(villagesQueries, "updateCoordinates");
+    spy(citiesQueries, "updateCoordinates");
+    spy(villagesQueries, "storeRoutes");
+    spy(citiesQueries, "storeRoutes");
+    spy(villagesQueries, "refresh");
+    spy(citiesQueries, "refresh");
+    return main(cities, villages).do(noop, noop, () => {
+        assert.callOrder(
+            citiesQueries.updateCoordinates,
+            villagesQueries.updateCoordinates,
+            villagesQueries.refresh,
+            citiesQueries.refresh
+        );
+        t.true(citiesQueries.clearRoutes.calledBefore(citiesQueries.storeRoutes));
+        t.true(villagesQueries.clearRoutes.calledBefore(villagesQueries.storeRoutes));
+        t.true(citiesQueries.storeRoutes.calledBefore(citiesQueries.refresh));
+        t.true(villagesQueries.storeRoutes.calledBefore(villagesQueries.refresh));
+        t.true(citiesQueries.updateCoordinates.calledBefore(villagesQueries.storeRoutes));
+        assert.calledOnce(citiesQueries.clearRoutes);
+        assert.calledOnce(villagesQueries.clearRoutes);
+        assert.calledOnce(citiesQueries.refresh);
+        assert.calledOnce(villagesQueries.refresh);
+        assert.callCount(villagesQueries.updateCoordinates, list.villages.length);
+        assert.callCount(citiesQueries.updateCoordinates, list.cities.length);
+        assert.callCount(villagesQueries.storeRoutes, list.villages.length);
+        assert.callCount(citiesQueries.storeRoutes, list.cities.length ** 2);
+    });
 });

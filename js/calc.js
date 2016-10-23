@@ -1,5 +1,4 @@
 import { alignPoints, calculateCitiesRoutes, calculateVillagesRoutes } from './route';
-import { citiesQueries, villagesQueries } from "./store";
 import self from "./self";
 import { log } from "./config";
 import { accumulator } from "./util";
@@ -15,6 +14,10 @@ const Calc = (dao, quantity, complexity) => ({
 
     store() {
         return this.flatMap(dao.storeRoutes);
+    },
+
+    refresh() {
+        return Observable.defer(dao.refresh);
     },
 
     get complexity() {
@@ -45,4 +48,4 @@ export const main = (cities, villages) =>
     )).map((v, i) => {
         log(`${(100 * (i + 1) / (villages.complexity + cities.complexity)).toFixed(2)}%`);
         return v;
-    }).concat(Observable.defer(() => villagesQueries.refresh().concat(citiesQueries.refresh())));
+    }).concat(villages.refresh().concat(cities.refresh()));
