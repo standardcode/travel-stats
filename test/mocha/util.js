@@ -1,5 +1,5 @@
 import { expect } from 'chai';
-import { accumulator } from "../js/util";
+import { accumulator } from "../../js/util";
 
 describe('accumulator', () => {
     it('should add element at the end of an array', () => {

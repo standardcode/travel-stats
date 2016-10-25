@@ -2,10 +2,10 @@ import { expect } from 'chai';
 import mockery from "mockery";
 import { Observable } from 'rxjs/Rx';
 import { noop, sortBy } from "lodash";
-import osrm from "./mock/osrm.mock";
-import pgp from "./mock/pg-promise.mock";
-import { cities, villages } from "./mock/data";
-import { numberOfCities } from "../js/config";
+import osrm from "../mock/osrm.mock";
+import pgp from "../mock/pg-promise.mock";
+import { cities, villages } from "../mock/data";
+import { numberOfCities } from "../../js/config";
 
 describe('route', () => {
     let route;
@@ -17,7 +17,7 @@ describe('route', () => {
         mockery.registerAllowables(["../js/self", "lodash", "rxjs/Rx"]);
         mockery.registerMock("osrm", osrm);
         mockery.registerMock("pg-promise", pgp);
-        route = require("../js/route");
+        route = require("../../js/route");
     });
     after(() => {
         mockery.disable();
@@ -48,7 +48,7 @@ describe('route', () => {
         const all = [];
         citiesClass.subscribe(all.push.bind(all), noop, () => {
             expect(all).to.have.lengthOf(1);
-            expect(all[0]).to.have.all.keys("start", "destination", "distance", "duration");
+            expectToBeRoute(all[0]);
             done();
         })
     });

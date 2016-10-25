@@ -3,10 +3,10 @@ import { expect } from 'chai';
 import mockery from "mockery";
 import { noop, flatten } from "lodash";
 import { Observable } from 'rxjs/Rx';
-import pgp from "./mock/pg-promise.mock";
-import osrm from "./mock/osrm.mock";
-import { accumulator } from "../js/util";
-import * as data from "./mock/data";
+import pgp from "../mock/pg-promise.mock";
+import osrm from "../mock/osrm.mock";
+import { accumulator } from "../../js/util";
+import * as data from "../mock/data";
 import { spy, assert } from "sinon";
 
 test.beforeEach(t => {
@@ -16,8 +16,8 @@ test.beforeEach(t => {
     });
     mockery.registerMock("pg-promise", pgp);
     mockery.registerMock("osrm", osrm);
-    const store = require("../js/store");
-    const calc = require("../js/calc");
+    const store = require("../../js/store");
+    const calc = require("../../js/calc");
     const numberOfVillages = 3;
     const numberOfCities = 2;
     data.villages.forEach(v => v.location = [v.longitude, v.latitude]);
