@@ -22,16 +22,18 @@ test.beforeEach(t => {
     const numberOfCities = 2;
     data.villages.forEach(v => v.location = [v.longitude, v.latitude]);
     data.cities.forEach(v => v.location = [v.longitude, v.latitude]);
+    const villagesQueries = { ...store.villagesQueries };
+    const citiesQueries = { ...store.citiesQueries };
     t.context = {
         list: {
             villages: data.villages.slice(0, numberOfVillages),
             cities: data.cities.slice(0, numberOfCities)
         },
-        villages: calc.Villages(store.villagesQueries, numberOfVillages),
-        cities: calc.Cities(store.citiesQueries, numberOfCities),
+        villages: calc.Villages(villagesQueries, numberOfVillages),
+        cities: calc.Cities(citiesQueries, numberOfCities),
         main: calc.main,
-        villagesQueries: store.villagesQueries,
-        citiesQueries: store.citiesQueries
+        villagesQueries,
+        citiesQueries
     }
 });
 
@@ -74,7 +76,7 @@ test("main", t => {
     return main(cities, villages).do(() => t.pass())
 });
 
-test.only("main spy", t => {
+test("main spy", t => {
     const { main, list, villages, cities, villagesQueries, citiesQueries } = t.context;
     spy(villagesQueries, "clearRoutes");
     spy(citiesQueries, "clearRoutes");
@@ -104,5 +106,13 @@ test.only("main spy", t => {
         assert.callCount(citiesQueries.updateCoordinates, list.cities.length);
         assert.callCount(villagesQueries.storeRoutes, list.villages.length);
         assert.callCount(citiesQueries.storeRoutes, list.cities.length ** 2);
+        villagesQueries.clearRoutes.restore();
+        citiesQueries.clearRoutes.restore();
+        villagesQueries.updateCoordinates.restore();
+        citiesQueries.updateCoordinates.restore();
+        villagesQueries.storeRoutes.restore();
+        citiesQueries.storeRoutes.restore();
+        villagesQueries.refresh.restore();
+        citiesQueries.refresh.restore();
     });
 });
