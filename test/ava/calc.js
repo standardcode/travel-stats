@@ -73,7 +73,8 @@ test("store villages routes", t => {
 test("main", t => {
     const { main, list, villages, cities } = t.context;
     t.plan(list.villages.length + list.cities.length ** 2);
-    return main(cities, villages).do(() => t.pass())
+    console.time("Done");
+    return main(cities, villages).do(() => t.pass(),noop,() => console.timeEnd("Done"))
 });
 
 test("main spy", t => {

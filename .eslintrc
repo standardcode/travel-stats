@@ -13,7 +13,7 @@
             "experimentalObjectRestSpread": true
         }
     },
-    "globals": {
-        "console": true
+    "rules": {
+        "no-console": "off"
     }
 }

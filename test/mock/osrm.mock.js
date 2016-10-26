@@ -1,4 +1,6 @@
-const later = (cb, response) => setTimeout(() => cb(undefined, response), 10 * Math.random());
+import { delay } from "./util";
+
+const later = (cb, response) => delay(() => cb(undefined, response));
 
 export default () => ({
     route: ({ coordinates: [from, to] }, cb) => {

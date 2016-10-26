@@ -1,7 +1,6 @@
 import { Observable } from 'rxjs/Rx';
 import server from "./get";
-import { osrmFile } from "./config";
-import { grow } from "./util";
+import { osrmFile, parallelQueries } from "./config";
 import { selectCitiesAround } from "./store";
 import OSRM from "osrm";
 
@@ -19,7 +18,7 @@ export const alignPoints = (cities) => {
             population: city.population,
             location: result.waypoints[0].location
         }))
-    ).mergeAll(64);
+    ).mergeAll(parallelQueries);
 };
 
 const route = server(osrm.route.bind(osrm));
@@ -36,17 +35,16 @@ const calculateRoutes = (start, destination, location) =>
     }));
 
 export const calculateCitiesRoutes = (cities) => {
-    const concurrent = grow(3, 7);
-    return Observable.from(cities).map(start =>
+    return Observable.from(cities).flatMap(start =>
         Observable.from(cities.filter(destination => destination !== start)).map(destination =>
             calculateRoutes(start, destination, destination => destination.location)
-        ).mergeAll(9)
-    ).mergeAll(7);
+        )
+    ).mergeAll(parallelQueries);
 };
 
 export const calculateVillagesRoutes = (village) =>
     selectCitiesAround(village.id).map(cities =>
         Observable.from(cities).map(city =>
             calculateRoutes(village, city, city => [city.longitude, city.latitude])
-        ).mergeAll(5).min((a, b) => a.duration - b.duration)
-    ).mergeAll(3);
+        ).mergeAll().min((a, b) => a.duration - b.duration)
+    );

@@ -1,9 +1,8 @@
 import { cities, villages } from "./data";
+import { delay } from "./util";
 
 export default () => () => ({
-    none: (query, parameters) =>  new Promise(function (resolve) {
-        setTimeout(resolve, 10 * Math.random());
-    }),
+    none: (query, parameters) => new Promise(delay),
     any: (query, parameters) => {
         let result = [];
         switch (query) {
@@ -23,7 +22,7 @@ ORDER BY c.point <-> v.point LIMIT 10;`:
                 break;
         }
         return new Promise(function (resolve) {
-            setTimeout(() => resolve(result), 10 * Math.random());
+            delay(() => resolve(result));
         });
     }
 });

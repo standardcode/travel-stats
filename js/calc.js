@@ -1,6 +1,6 @@
 import { alignPoints, calculateCitiesRoutes, calculateVillagesRoutes } from './route';
 import self from "./self";
-import { log } from "./config";
+import { log, parallelQueries } from "./config";
 import { accumulator } from "./util";
 import { Observable } from 'rxjs/Rx';
 
@@ -29,7 +29,7 @@ export const Villages = (dao, quantity) => ({
     ...Calc(dao, quantity, quantity),
 
     routes() {
-        return this.flatMap(calculateVillagesRoutes);
+        return this.flatMap(calculateVillagesRoutes).mergeAll(parallelQueries);
     }
 });
 

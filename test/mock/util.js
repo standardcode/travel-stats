@@ -1,0 +1,1 @@
+export const delay = (f) => setTimeout(f, 10 * Math.random());
