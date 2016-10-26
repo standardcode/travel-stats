@@ -43,10 +43,10 @@ describe('route', () => {
 
     it('should calculate villages', (done) => {
         villages.forEach(v => v.location = [v.longitude, v.latitude]);
-        const citiesClass = route.calculateVillagesRoutes(villages[0]);
-        expect(citiesClass).to.be.an.instanceof(Observable);
+        const villagesClass = route.calculateVillagesRoutes(villages[0]);
+        expect(villagesClass).to.be.an.instanceof(Observable);
         const all = [];
-        citiesClass.subscribe(all.push.bind(all), noop, () => {
+        villagesClass.flatMap(v => v).subscribe(all.push.bind(all), noop, () => {
             expect(all).to.have.lengthOf(1);
             expectToBeRoute(all[0]);
             done();
