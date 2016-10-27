@@ -1,5 +1,4 @@
 import { Observable } from 'rxjs/Rx';
-import server from "./get";
 import { osrmFile, parallelQueries } from "./config";
 import { selectCitiesAround } from "./store";
 import OSRM from "osrm";
@@ -9,7 +8,7 @@ const osrm = new OSRM(osrmFile);
 console.timeEnd("Map");
 
 export const alignPoints = (cities) => {
-    const nearest = server(osrm.nearest.bind(osrm));
+    const nearest = Observable.bindNodeCallback(::osrm.nearest);
     return Observable.from(cities).map(city => nearest({ coordinates: [[city.longitude, city.latitude]] })
         .map(result => ({
             id: city.id,
@@ -21,7 +20,7 @@ export const alignPoints = (cities) => {
     ).mergeAll(parallelQueries);
 };
 
-const route = server(osrm.route.bind(osrm));
+const route = Observable.bindNodeCallback(::osrm.route);
 
 const calculateRoutes = (start, destination, location) =>
     route({
@@ -34,13 +33,12 @@ const calculateRoutes = (start, destination, location) =>
         duration: route.duration // seconds
     }));
 
-export const calculateCitiesRoutes = (cities) => {
-    return Observable.from(cities).flatMap(start =>
+export const calculateCitiesRoutes = (cities) =>
+    Observable.from(cities).flatMap(start =>
         Observable.from(cities.filter(destination => destination !== start)).map(destination =>
             calculateRoutes(start, destination, destination => destination.location)
         )
     ).mergeAll(parallelQueries);
-};
 
 export const calculateVillagesRoutes = (village) =>
     selectCitiesAround(village.id).map(cities =>
