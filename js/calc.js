@@ -5,10 +5,11 @@ import { accumulator } from "./util";
 import { Observable } from 'rxjs/Rx';
 
 const Calc = (dao, quantity, complexity) => ({
-    align() {
+    align(parallel) {
         return dao.clearRoutes()
             .concat(dao.select(quantity))
             .flatMap(alignPoints)
+            .mergeAll(parallel)
             .flatMap(dao.updateCoordinates);
     },
 
@@ -29,7 +30,7 @@ export const Villages = (dao, quantity) => ({
     ...Calc(dao, quantity, quantity),
 
     routes() {
-        return this.flatMap(calculateVillagesRoutes).mergeAll(parallelQueries);
+        return this.flatMap(calculateVillagesRoutes).mergeAll(Math.sqrt(parallelQueries) / 2);
     }
 });
 
@@ -42,8 +43,8 @@ export const Cities = (dao, quantity) => ({
 });
 
 export const main = (cities, villages) =>
-    cities.align().reduce(accumulator, []).flatMap(c => Observable.merge(
-        villages.align()::villages.routes()::villages.store(),
+    cities.align(parallelQueries).reduce(accumulator, []).flatMap(c => Observable.merge(
+        villages.align(parallelQueries / 4)::villages.routes()::villages.store(),
         cities.routes(c)::cities.store()
     )).map((v, i) => {
         log(`${(100 * (i + 1) / (villages.complexity + cities.complexity)).toFixed(2)}%`);

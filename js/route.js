@@ -17,7 +17,7 @@ export const alignPoints = (cities) => {
             population: city.population,
             location: result.waypoints[0].location
         }))
-    ).mergeAll(parallelQueries);
+    );
 };
 
 const route = Observable.bindNodeCallback(::osrm.route);
@@ -38,11 +38,11 @@ export const calculateCitiesRoutes = (cities) =>
         Observable.from(cities.filter(destination => destination !== start)).map(destination =>
             calculateRoutes(start, destination, destination => destination.location)
         )
-    ).mergeAll(parallelQueries);
+    ).mergeAll(parallelQueries / 2);
 
 export const calculateVillagesRoutes = (village) =>
     selectCitiesAround(village.id).map(cities =>
         Observable.from(cities).map(city =>
             calculateRoutes(village, city, city => [city.longitude, city.latitude])
-        ).mergeAll().min((a, b) => a.duration - b.duration)
+        ).mergeAll(Math.sqrt(parallelQueries) / 2).min((a, b) => a.duration - b.duration)
     );

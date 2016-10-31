@@ -4,8 +4,9 @@ import mockery from "mockery";
 import { noop, flatten } from "lodash";
 import { Observable } from 'rxjs/Rx';
 import pgp from "../mock/pg-promise.mock";
-import osrm from "../mock/osrm.mock";
+import osrm, { lastOSRM } from "../mock/osrm.mock";
 import { accumulator } from "../../js/util";
+import { parallelQueries } from "../../js/config";
 import * as data from "../mock/data";
 import { spy, assert } from "sinon";
 
@@ -72,9 +73,12 @@ test("store villages routes", t => {
 
 test("main", t => {
     const { main, list, villages, cities } = t.context;
-    t.plan(list.villages.length + list.cities.length ** 2);
+    t.plan(list.villages.length + list.cities.length ** 2 + 1);
     console.time("Done");
-    return main(cities, villages).do(() => t.pass(),noop,() => console.timeEnd("Done"))
+    return main(cities, villages).do(() => t.pass(), noop, () => {
+        t.true(lastOSRM().top <= parallelQueries);
+        console.timeEnd("Done");
+    })
 });
 
 test("main spy", t => {

@@ -27,6 +27,7 @@
         "no-param-reassign": "error",
         "no-sequences": "error",
         "yoda": "error",
+        "semi": "warn",
         "prefer-const": "error"
     }
 }

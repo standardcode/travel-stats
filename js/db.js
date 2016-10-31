@@ -9,7 +9,7 @@ function handleError(observer, query, params) {
     return function (e) {
         log(`Query: ${query}\nParameters: ${JSON.stringify(params)}\n`, e);
         observer.error(e);
-    }
+    };
 }
 
 const exec = (query, params = [], method = "none") => {
@@ -18,7 +18,7 @@ const exec = (query, params = [], method = "none") => {
         db[method](query, params).then((result) => {
             observer.next(result);
             observer.complete();
-        }).catch(handleError(observer, query, params))
+        }).catch(handleError(observer, query, params));
     });
 };
 
@@ -32,6 +32,6 @@ export const insert = (query, unfold) => {
         db.none(query, unfold(row)).then(() => {
             observer.next(row);
             observer.complete();
-        }).catch(handleError(observer, query, row))
+        }).catch(handleError(observer, query, row));
     });
 };
