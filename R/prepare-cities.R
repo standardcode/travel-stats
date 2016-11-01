@@ -16,7 +16,7 @@ extractCommunity <- function(text) {
 readPopulation <- function(big) {
   df <-
     read.csv(
-      "TABL.27 -Table 1.csv",
+      "cities-population.csv",
       sep = ";",
       header = FALSE,
       skip = 10,
@@ -48,8 +48,8 @@ dmsAsDouble <- function(value) {
 readGeolocation <- function() {
   df <-
     rbindlist(list(
-      read.csv("miejscowosci.csv"),
-      read.csv("miejscowosci_1.csv")
+      read.csv("villages_1.csv"),
+      read.csv("villages_2.csv")
     ))
   df$id <-
     lapply(df$identyfikator.jednostki.podziału.terytorialnego.kraju,
@@ -82,7 +82,7 @@ readGeolocation <- function() {
 readVillagesPopulation <- function() {
   demography <-
     read.csv(
-      "Demografia_Polski_2015.csv",
+      "villages-population.csv",
       header = FALSE,
       skip = 4547,
       col.names = c("name", "", "", "", "community", "", "", "", "", "population", "")
@@ -100,17 +100,16 @@ prepareVillages <- function(villages) {
 
 geo <- readGeolocation()
 cities <-
-  merge(readPopulation(geo$big),
-        geo$cities,
-        by.x = "id",
-        by.y = "id")
+  merge(readPopulation(geo$big), geo$cities)
 cities <- cities[, c(1, 2, 3, 4, 5, 6)]
+cities$point <- NA
 
 villages <-
   merge(prepareVillages(geo$villages), readVillagesPopulation())
 villages <- villages[, c(5, 1, 7, 3, 4)]
 villages <- villages[order(villages$id, villages$name), ]
 villages$id <- villages$id * 100 + sequence(count_(villages, ~ id)$n)
+villages$point <- NA
 
 db <- psql()
 con <- db$connect()
@@ -126,5 +125,10 @@ dbWriteTable(
   append = TRUE,
   row.names = FALSE
 )
+
+dbSendQuery(con, 
+            "UPDATE cities SET point = ST_SetSRID(ST_MakePoint(longitude, latitude), 4326);
+             UPDATE villages SET point = ST_SetSRID(ST_MakePoint(longitude, latitude), 4326);
+")
 
 db$disconnect()

@@ -27,6 +27,20 @@ CREATE EXTENSION IF NOT EXISTS plpgsql WITH SCHEMA pg_catalog;
 COMMENT ON EXTENSION plpgsql IS 'PL/pgSQL procedural language';
 
 
+--
+-- Name: postgis; Type: EXTENSION; Schema: -; Owner: 
+--
+
+CREATE EXTENSION IF NOT EXISTS postgis WITH SCHEMA public;
+
+
+--
+-- Name: EXTENSION postgis; Type: COMMENT; Schema: -; Owner: 
+--
+
+COMMENT ON EXTENSION postgis IS 'PostGIS geometry, geography, and raster spatial types and functions';
+
+
 SET search_path = public, pg_catalog;
 
 SET default_tablespace = '';
@@ -43,25 +57,99 @@ CREATE TABLE cities (
     population integer NOT NULL,
     area integer NOT NULL,
     latitude double precision NOT NULL,
-    longitude double precision NOT NULL
+    longitude double precision NOT NULL,
+    point geometry(Point,4326)
 );
 
 
 ALTER TABLE cities OWNER TO postgres;
 
 --
--- Name: routes; Type: TABLE; Schema: public; Owner: postgres
+-- Name: cities_routes; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE cities_routes (
     duration double precision NOT NULL,
     distance double precision NOT NULL,
     "from" integer NOT NULL,
-    "to" integer NOT NULL
+    "to" integer NOT NULL,
+    circle double precision
 );
 
 
 ALTER TABLE cities_routes OWNER TO postgres;
+
+--
+-- Name: villages; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE villages (
+    id integer NOT NULL,
+    name character varying NOT NULL,
+    population integer NOT NULL,
+    latitude double precision NOT NULL,
+    longitude double precision NOT NULL,
+    point geometry(Point,4326)
+);
+
+
+ALTER TABLE villages OWNER TO postgres;
+
+--
+-- Name: villages_routes; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE villages_routes (
+    duration double precision NOT NULL,
+    distance double precision NOT NULL,
+    "from" integer NOT NULL,
+    "to" integer NOT NULL,
+    circle double precision
+);
+
+
+ALTER TABLE villages_routes OWNER TO postgres;
+
+--
+-- Name: hinterland; Type: MATERIALIZED VIEW; Schema: public; Owner: postgres
+--
+
+CREATE MATERIALIZED VIEW hinterland AS
+ SELECT r."to" AS id,
+    sum(v.population) AS population,
+    (sum((r.duration * (v.population)::double precision)) / (sum(v.population))::double precision) AS duration
+   FROM (villages_routes r
+     JOIN villages v ON ((r."from" = v.id)))
+  GROUP BY r."to"
+  ORDER BY (sum(v.population)) DESC
+  WITH NO DATA;
+
+
+ALTER TABLE hinterland OWNER TO postgres;
+
+--
+-- Name: cities_stats; Type: MATERIALIZED VIEW; Schema: public; Owner: postgres
+--
+
+CREATE MATERIALIZED VIEW cities_stats AS
+ SELECT c1.id,
+    ((sum((r.duration * (c2.population)::double precision)) + sum(((r.duration + h.duration) * (h.population)::double precision))) / (total.total)::double precision) AS duration
+   FROM ( SELECT ((( SELECT sum(c.population) AS total
+                   FROM (cities c
+                     JOIN cities_routes r_1 ON ((r_1."to" = c.id)))
+                  GROUP BY r_1."from"
+                 LIMIT 1))::numeric + ( SELECT sum(hinterland.population) AS total
+                   FROM hinterland
+                 LIMIT 1)) AS total) total,
+    (((cities_routes r
+     JOIN cities c1 ON ((r."from" = c1.id)))
+     JOIN cities c2 ON ((r."to" = c2.id)))
+     JOIN hinterland h ON ((c2.id = h.id)))
+  GROUP BY c1.id, total.total
+  WITH NO DATA;
+
+
+ALTER TABLE cities_stats OWNER TO postgres;
 
 --
 -- Name: cities_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
@@ -72,7 +160,15 @@ ALTER TABLE ONLY cities
 
 
 --
--- Name: from_key; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: villages_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY villages
+    ADD CONSTRAINT villages_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: cities_from_key; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY cities_routes
@@ -80,35 +176,28 @@ ALTER TABLE ONLY cities_routes
 
 
 --
--- Name: to_key; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: cities_to_key; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY cities_routes
     ADD CONSTRAINT cities_to_key FOREIGN KEY ("to") REFERENCES cities(id);
 
 
--- Optional table for villages
+--
+-- Name: villages_from_key; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
 
-CREATE TABLE villages (
-    id integer NOT NULL,
-    name character varying NOT NULL,
-    population integer NOT NULL,
-    latitude double precision NOT NULL,
-    longitude double precision NOT NULL
-);
-
-ALTER TABLE villages OWNER TO postgres;
-
-ALTER TABLE ONLY villages
-    ADD CONSTRAINT villages_pkey PRIMARY KEY (id);
+ALTER TABLE ONLY villages_routes
+    ADD CONSTRAINT villages_from_key FOREIGN KEY ("from") REFERENCES villages(id);
 
 
-CREATE TABLE villages_routes (
-    duration double precision NOT NULL,
-    distance double precision NOT NULL,
-    "from" integer NOT NULL,
-    "to" integer NOT NULL
-);
+--
+-- Name: villages_to_key; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY villages_routes
+    ADD CONSTRAINT villages_to_key FOREIGN KEY ("to") REFERENCES cities(id);
+
 
 --
 -- Name: public; Type: ACL; Schema: -; Owner: postgres
@@ -123,18 +212,3 @@ GRANT ALL ON SCHEMA public TO PUBLIC;
 --
 -- PostgreSQL database dump complete
 --
-
-CREATE MATERIALIZED VIEW hinterland AS
-    SELECT r.to AS id, sum(v.population) AS population, sum(r.duration*v.population)/sum(v.population) AS duration
-    FROM villages_routes r INNER JOIN villages v ON r.from = v.id
-    GROUP BY r.to;
-
-CREATE MATERIALIZED VIEW cities_stats AS
-    SELECT c1.id,
-    (sum(r.duration*c2.population)+sum((r.duration+h.duration)*h.population))/total AS duration
-    FROM
-    (SELECT (SELECT sum(population) AS total FROM cities c INNER JOIN cities_routes r ON r.to = c.id GROUP BY r.from LIMIT 1) +
-            (SELECT sum(population) AS total FROM hinterland LIMIT 1) AS total) AS total,
-    cities_routes r INNER JOIN cities c1 ON r.from = c1.id INNER JOIN cities c2 ON r.to = c2.id
-    INNER JOIN hinterland h ON c2.id = h.id
-    GROUP BY c1.id, total;
