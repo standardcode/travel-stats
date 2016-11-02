@@ -19,8 +19,9 @@ ORDER BY duration DESC;"
 villages <- dbGetQuery(con, q)
 
 df <- rbindlist(list(cities, villages), use.names = TRUE, fill = TRUE)
+clean <- df[!df$duration %in% boxplot.stats(df$duration, coef = 2)$out]
 
-ggplot(df, aes(x = longitude, y = latitude, label = name)) +
+ggplot(clean, aes(x = longitude, y = latitude, label = name)) +
   geom_point(aes(size = population / 1000, color = duration), alpha = .8) +
   scale_size_area("Population [K]", breaks = c(10, 100, 1000)) +
   scale_color_gradientn("Driving time [h]", colours = rainbow(4, start = 0, end = .7)) +
