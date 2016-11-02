@@ -13,8 +13,8 @@ export default () => () => ({
                 result = villages.slice(0, parameters[0]);
                 break;
             case `SELECT c.id, c.name, c.latitude, c.longitude, ST_Distance(c.point, v.point) AS distance
-FROM villages v, cities c WHERE v.id = $1
-ORDER BY c.point <-> v.point LIMIT 10;`:
+        FROM villages v, cities c WHERE v.id = $1
+        ORDER BY c.point <-> v.point LIMIT 10;`:
                 result = cities.slice(0, 2).map(c => ({
                     ...c,
                     distance: c.id

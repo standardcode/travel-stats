@@ -35,7 +35,7 @@ describe('route', () => {
         }]);
         expect(cities).to.be.an.instanceof(Observable);
         const all = [];
-        cities.subscribe(all.push.bind(all), noop, () => {
+        cities.flatMap(p => p).subscribe(all.push.bind(all), noop, () => {
             expect(sortBy(all, "id").map(city => city.location)).to.eql([[1.5, 2.3], [8.5, 5.3]]);
             done();
         })

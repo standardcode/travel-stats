@@ -1,6 +1,7 @@
 import { execute, select, insert } from "./db";
+import { refreshCities, refreshVillages, selectCitiesAroundVillage } from "./sql";
 
-const Queries = (table) => ({
+const Queries = (table, refreshQuery) => ({
     updateCoordinates: insert(
         `update ${table} set longitude = $1, latitude = $2 where id = $3`,
         c => c.location.concat([c.id])
@@ -11,6 +12,8 @@ const Queries = (table) => ({
         r => [r.start.id, r.destination.id, r.distance, r.duration]
     ),
 
+    refresh: () => execute(refreshQuery),
+
     clearRoutes: () => execute(`truncate ${table}_routes;`),
 
     select: (number) => select(
@@ -19,33 +22,8 @@ const Queries = (table) => ({
     )
 });
 
-const Cities = (table) => ({
-    ...Queries(table),
+export const citiesQueries = Queries("cities", refreshCities);
 
-    refresh: () => execute(`
-UPDATE cities_routes r SET circle = ST_Distance_Spheroid(c1.point,c2.point,'SPHEROID["WGS 84", 6378137,298.257223563]')
-    FROM cities c1, cities c2 WHERE r.from = c1.id AND r.to = c2.id;
-UPDATE cities_routes r SET circle = r.distance
-    FROM cities c WHERE r.from = r.to AND r.from = c.id;
-REFRESH MATERIALIZED VIEW cities_stats`)
-});
+export const villagesQueries = Queries("villages", refreshVillages);
 
-const Villages = (table) => ({
-    ...Queries(table),
-
-    refresh: () => execute(`
-UPDATE villages_routes r SET circle = ST_Distance_Spheroid(v.point,c.point,'SPHEROID["WGS 84", 6378137,298.257223563]')
-    FROM villages v, cities c WHERE r.from = v.id AND r.to = c.id;
-REFRESH MATERIALIZED VIEW hinterland`)
-});
-
-export const citiesQueries = Cities("cities");
-
-export const villagesQueries = Villages("villages");
-
-export const selectCitiesAround = (id) => select(
-    `SELECT c.id, c.name, c.latitude, c.longitude, ST_Distance(c.point, v.point) AS distance
-FROM villages v, cities c WHERE v.id = $1
-ORDER BY c.point <-> v.point LIMIT 10;`,
-    [id]
-);
+export const selectCitiesAround = (id) => select(selectCitiesAroundVillage, [id]);
