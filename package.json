@@ -6,7 +6,7 @@
   "scripts": {
     "start": "nodemon js/main.js --exec babel-node --presets es2015,stage-2",
     "build": "babel js -d dist",
-    "serve": "node dist/main.js",
+    "serve": "node --max_old_space_size=2048 dist/main.js",
     "lint": "eslint js/ --ext .js",
     "mocha": "mocha --compilers js:babel-core/register --require babel-polyfill ./test/mocha/",
     "ava": "ava",

@@ -48,7 +48,7 @@ City with longest average driving time to other cities
   * [Geolocation](http://www.codgik.gov.pl/index.php/darmowe-dane/prng.html) link _PRNG - nazwy miejscowości_
   * [Villages population](http://demografia.lo.pl/) (optional) link _Pobierz_
 
-3. Run `insert-data-in-db.R` with working directory set to the converted files.
+3. Run `insert-data-in-db.R` with working directory set to the one containing the CSV files.
 
 #### Routing server
 
@@ -59,7 +59,7 @@ City with longest average driving time to other cities
 
 #### Running
 
-Set the numbers of cities and villages you want to calculate in `js/config.js`. There is 919 cities and 37177 villages. Calculations for all of them take almost 2h. The computational complexity is O(n<sup>2</sup>) for cities and O(n) for villages.
+Set the numbers of cities and villages you want to calculate in `js/config.js`. There is 919 cities and 37177 villages. Calculations for all of them take about 45min on 2,6 GHz Intel Core i5. The computational complexity is O(n<sup>2</sup>) for cities and O(n) for villages.
 
 Run calculation.
 ```shell
@@ -69,4 +69,4 @@ $ npm run build && npm run serve
 
 #### Results
 
-Run `show-country-map.R` to see resulting times as colors on a map. You may run it also during calculation to see partial results.
+Run `show-country-map.R` to see resulting times as colors on a map.
