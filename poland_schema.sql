@@ -117,7 +117,8 @@ ALTER TABLE villages_routes OWNER TO postgres;
 CREATE MATERIALIZED VIEW hinterland AS
  SELECT r."to" AS id,
     sum(v.population) AS population,
-    (sum((r.duration * (v.population)::double precision)) / (sum(v.population))::double precision) AS duration
+    (sum((r.duration * (v.population)::double precision)) / (sum(v.population))::double precision) AS duration,
+    (sum((r.distance * (v.population)::double precision)) / (sum(v.population))::double precision) AS distance
    FROM (villages_routes r
      JOIN villages v ON ((r."from" = v.id)))
   GROUP BY r."to"
@@ -133,7 +134,8 @@ ALTER TABLE hinterland OWNER TO postgres;
 
 CREATE MATERIALIZED VIEW cities_stats AS
  SELECT c1.id,
-    ((sum((r.duration * (c2.population)::double precision)) + sum(((r.duration + h.duration) * (h.population)::double precision))) / (total.total)::double precision) AS duration
+    ((sum((r.duration * (c2.population)::double precision)) + sum(((r.duration + h.duration) * (h.population)::double precision))) / (total.total)::double precision) AS duration,
+    ((sum((r.distance * (c2.population)::double precision)) + sum(((r.distance + h.distance) * (h.population)::double precision))) / (total.total)::double precision) AS distance
    FROM ( SELECT ((( SELECT sum(c.population) AS total
                    FROM (cities c
                      JOIN cities_routes r_1 ON ((r_1."to" = c.id)))
