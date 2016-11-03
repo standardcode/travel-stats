@@ -8,8 +8,8 @@ db <- psql()
 con <- db$connect()
 
 q <- "SELECT c1.name, c1.latitude, c1.longitude, c1.population, (sum(r.distance/r.circle*c2.population))/total AS ratio
-FROM (SELECT sum(population) AS total FROM cities c INNER JOIN routes r ON r.to = c.id GROUP BY r.from LIMIT 1) AS total,
-routes r INNER JOIN cities c1 ON r.from = c1.id INNER JOIN cities c2 ON r.to = c2.id
+FROM (SELECT sum(population) AS total FROM cities c INNER JOIN cities_routes r ON r.to = c.id GROUP BY r.from LIMIT 1) AS total,
+cities_routes r INNER JOIN cities c1 ON r.from = c1.id INNER JOIN cities c2 ON r.to = c2.id
 GROUP BY c1.id, total;"
 
 df <- dbGetQuery(con, q)

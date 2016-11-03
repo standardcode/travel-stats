@@ -10,7 +10,7 @@ con <- db$connect()
 
 q <- "SELECT c1.name, c1.latitude, c1.longitude, c1.population,
 (3600/1000)*sum(c2.population*r.distance/r.duration)/sum(c2.population) AS velocity
-FROM routes r INNER JOIN cities c1 ON r.from = c1.id INNER JOIN cities c2 ON r.to = c2.id
+FROM cities_routes r INNER JOIN cities c1 ON r.from = c1.id INNER JOIN cities c2 ON r.to = c2.id
 GROUP BY c1.id;"
 
 df <- dbGetQuery(con, q)
