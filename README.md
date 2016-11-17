@@ -30,13 +30,13 @@ City with longest average driving time to other cities
          name      |   h   |    km     
     Ustrzyki Dolne | 6.347 | 508.290
 
-`examples.sql` contains queries used to generate this statistics and more.
+`examples.sql` contains queries used to generate this statistics and more. You may download [already calculated routes](https://sutkowski.egnyte.com/dl/lYFJaTduYY/poland-routes-data.sql.zip_) and skip next points.
  
 ### Getting Started
 
 #### Database
 
-* Install PostgreSQL if you don't have it already.
+* Install PostgreSQL with PostGIS if you don't have it already.
 * Import schema from `poland_schema.sql` to your database.
 * Configure connection in `js/config.js` and in `R/db.R`.
 
