@@ -1,7 +1,12 @@
 #install.packages("ggplot2")
 #install.packages("mapproj")
+#install.packages("rgeos", type="source")
+#install.packages("broom")
 library("ggplot2")
 library("mapproj")
+library("maptools")
+library("rgeos")
+library("broom")
 source("R/db.R")
 
 db <- psql()
@@ -35,10 +40,23 @@ villages <- dbGetQuery(con, q)
 colorMap <- data.frame(id = capitalCities[["id"]], color = order(substring(capitalCities[["name"]], 2)))
 df <- merge(rbind(cities, villages), colorMap, by.x = "to", by.y = "id", all.x = TRUE)
 
+voivodeshipPolygons <- readShapePoly("POL_adm1.shp")
+voivodeshipPolygons <-
+  gSimplify(voivodeshipPolygons, 0.02, topologyPreserve = TRUE)
+
+voivodeship <- tidy(voivodeshipPolygons, region = "id")
+voivodeship$name <- ""
+
 ggplot(df, aes(x = longitude, y = latitude, label = name)) +
   geom_point(aes(size = population / 1000, color = color)) +
   scale_size_area("Population [K]", breaks = c(10, 100, 1000)) +
   scale_color_gradientn(colours = rainbow(18), guide = FALSE) +
+  geom_path(
+    data = voivodeship,
+    size = .2,
+    color = "black",
+    aes(x = long, y = lat, group = id)
+  ) +
   coord_map("ortho", orientation = c(52, 19, 0))
 
 db$disconnect()
