@@ -6,9 +6,13 @@ Answer questions about driving time and distance between Polish cities and villa
 
 ### Statistics
 
-![Map of cities](./img/driving-time.png)
+![Driving times](./img/driving-time.png)
 
 Each dot is a city or a village and color indicates average driving time from this settlement to a random person in any other settlement in the country.
+
+![Nearest capital city](./img/nearest-capital-city.png)
+
+Nearest voivodeship's capital city and actual voivodeships boundaries.
 
 Longest driving time between 2 cities
 
@@ -30,7 +34,7 @@ City with longest average driving time to other cities
          name      |   h   |    km     
     Ustrzyki Dolne | 6.347 | 508.290
 
-`examples.sql` contains queries used to generate this statistics and more. You may download [already calculated routes](https://sutkowski.egnyte.com/dl/lYFJaTduYY/poland-routes-data.sql.zip_) and skip next points.
+`examples.sql` contains queries used to generate this statistics and more.
  
 ### Getting Started
 
@@ -38,6 +42,7 @@ City with longest average driving time to other cities
 
 * Install PostgreSQL with PostGIS if you don't have it already.
 * Import schema from `poland_schema.sql` to your database.
+* You may download [already calculated routes](https://sutkowski.egnyte.com/dl/lYFJaTduYY/poland-routes-data.sql.zip_) and skip next points.
 * Configure connection in `js/config.js` and in `R/db.R`.
 
 #### Data
